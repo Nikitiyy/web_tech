@@ -1,0 +1,12 @@
+.main {
+   display: flex;
+}
+
+.div {
+    flex: 1;
+    background-color: rgb(32, 214, 129);
+    padding: 1em;
+    border-radius: 1em;
+}
+
+
