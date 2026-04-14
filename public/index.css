@@ -1,0 +1,35 @@
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.background-div {
+    width: 50%;
+    background-color: rgb(32, 214, 129);
+    padding: 1em;
+    border-radius: 1em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.label, .input {
+    display: block;
+    margin-bottom: 1em;
+}
+
+form h1 {
+    text-align: center;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    background-color: blue;
+    padding: 1em;
+    border-radius: 1em;
+}
+
+
