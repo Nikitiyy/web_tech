@@ -225,9 +225,56 @@ function main_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';
     
-    const div = makeEl('div', 'background-div');
-    div.textContent = 'Вы вошли как пользователь';
-    main.appendChild(div);
+    const main_body = `
+    <div class="background-div">
+        <div class="form">
+            <h1>ГЛАВНАЯ СТРАНИЦА</h1>
+            
+            <h2>Добро пожаловать в каталог товаров музыкального магазина!</h2>
+            
+            <p>Наш магазин предлагает широкий ассортимент музыкальных инструментов и оборудования, доступный для покупки или предзаказа.</p>
+            
+            <p>Мы предоставляем возможность:</p>
+            <ul>
+                <li>Просматривать товары</li>
+                <li>Бронировать товары</li>
+                <li>Получать помощь от наших консультантов</li>
+            </ul>
+
+            <button type="button" id="button_catalog" class="button">
+                Каталог товаров
+            </button>
+
+            <button type="button" id="button_profile" class="button">
+                Профиль
+            </button>
+
+            <button type="button" id="button_contact" class="button">
+                Связь с администраторами
+            </button>
+        </div>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+
+    const button_catalog = document.getElementById('button_catalog');
+    button_catalog.onclick = () => {
+        router('/categories');
+        history.pushState({}, '', '/categories');
+    };
+
+    const button_profile = document.getElementById('button_profile');
+    button_profile.onclick = () => {
+        router('/profile');
+        history.pushState({}, '', '/profile');
+    };
+
+    const button_contact = document.getElementById('button_contact');
+    button_contact.onclick = () => {
+        router('/contact');
+        history.pushState({}, '', '/contact');
+    };
 }
 
 function guest_menu() {
