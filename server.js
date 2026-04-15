@@ -10,15 +10,28 @@ app.post('/api/login', async (req, res) => {
 
     const { login, password, role } = req.body;
     try {
-        const [rows] = await pool.query(
-            'SELECT * FROM users WHERE login = ? AND password = ? AND role = ?',
-            [login, password, role]
-        );
-        
-        if (rows.length > 0) {
-            res.json({ success: true, user: rows[0] });
+        if (role === 'admin') {
+            const [rows] = await pool.query(
+                'SELECT * FROM admins WHERE login = ? AND password = ?',
+                [login, password]
+            );
+            
+            if (rows.length > 0) {
+                res.json({ success: true, user: rows[0] });
+            } else {
+                res.json({ success: false});
+            }
         } else {
-            res.json({ success: false});
+            const [rows] = await pool.query(
+                'SELECT * FROM users WHERE login = ? AND password = ?',
+                [login, password]
+            );
+            
+            if (rows.length > 0) {
+                res.json({ success: true, user: rows[0] });
+            } else {
+                res.json({ success: false});
+            }
         }
     } catch (err) {
         console.error(err);
@@ -38,8 +51,8 @@ app.post('/api/reg', async (req, res) => {
         } 
 
         await pool.query(
-            'INSERT INTO users (login, email, password, role) VALUES (?, ?, ?, ?)',
-            [login, email, password, 'user']
+            'INSERT INTO users (login, email, password) VALUES (?, ?, ?)',
+            [login, email, password]
         );
 
         res.json({
