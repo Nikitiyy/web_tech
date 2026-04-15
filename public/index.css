@@ -1,35 +1,192 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
 .background-div {
-    width: 50%;
-    background-color: rgb(32, 214, 129);
-    padding: 1em;
-    border-radius: 1em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
+    max-width: 450px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(10px);
+    padding: 2.5em;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease-out;
 }
 
-.label, .input {
-    display: block;
-    margin-bottom: 1em;
-}
-
-form h1 {
-    text-align: center;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    background-color: blue;
-    padding: 1em;
-    border-radius: 1em;
+    gap: 1.2em;
+}
+
+form h1 {
+    text-align: center;
+    color: #fff;
+    font-size: 2em;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95em;
+    font-weight: 500;
+    margin-bottom: 0.3em;
+    display: block;
+}
+
+.input {
+    width: 100%;
+    padding: 0.9em 1.2em;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.input:focus {
+    border-color: #e94560;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15);
+}
+
+.input:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+select.input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1em center;
+    cursor: pointer;
+}
+
+select.input option {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 0.5em;
+}
+
+.button {
+    width: 100%;
+    padding: 0.9em 1.5em;
+    border: none;
+    border-radius: 12px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#button_enter {
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+}
+
+#button_enter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5);
+}
+
+#button_enter:active {
+    transform: translateY(0);
+}
+
+#button_reg {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(15, 52, 96, 0.3);
+}
+
+#button_reg:hover {
+    background: linear-gradient(135deg, #16213e, #1a1a2e);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+#button_guest {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+#button_guest:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+}
+
+.button:active {
+    transform: translateY(1px);
+}
+
+/* Стили для Toastify */
+.toastify {
+    margin: 0 !important;
+    padding: 1em 1.5em !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #e94560, #ff6b6b) !important;
+    color: #fff !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    font-size: 1em !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    z-index: 9999 !important;
+    min-width: 280px;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 480px) {
+    .background-div {
+        margin: 1em;
+        padding: 1.8em;
+    }
+
+    form h1 {
+        font-size: 1.6em;
+    }
+
+    .input, .button {
+        padding: 0.8em 1em;
+        font-size: 0.95em;
+    }
 }
 
 

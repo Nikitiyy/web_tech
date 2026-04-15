@@ -13,7 +13,7 @@ function makeEl(elem, classEl) {
 }
 
 function login() {
-    const main = `
+    const main_body = `
     
     <div class="background-div">
         <form class="form" method="POST">
@@ -59,7 +59,11 @@ function login() {
     `;
 
     const body = document.querySelector('body'); 
-    body.innerHTML = main;
+    body.innerHTML = main_body;
+
+    const input_login = document.getElementById('login');
+    const input_password = document.getElementById('password');
+    const select_role = document.getElementById('role');
 
     const button_enter = document.getElementById('button_enter');
     button_enter.onclick = async () => {
@@ -107,9 +111,9 @@ function login() {
         history.pushState({}, '', '/guest_admin');
     }
 }
-    
+
 function reg() {
-    const main = `
+    const main_body = `
     <div class="background-div">
         <form class="form" method="POST">
 
@@ -155,7 +159,7 @@ function reg() {
     </div>
     `;
     const body = document.querySelector('body'); 
-    body.innerHTML = main;
+    body.innerHTML = main_body;
 
     const input_login = document.getElementById('login');
     const input_email = document.getElementById('email');
@@ -209,15 +213,17 @@ function reg() {
 }
 
 function main_admin() {
-    const main = document.getElementById('main');
-    
+    const main = document.querySelector('body');
+    main.innerHTML = '';    
+
     const div = makeEl('div', 'background-div');
     div.textContent = 'Вы вошли как администратор';
     main.appendChild(div);
 }
 
 function main_menu() {
-    const main = document.getElementById('main');
+    const main = document.querySelector('body');
+    main.innerHTML = '';
     
     const div = makeEl('div', 'background-div');
     div.textContent = 'Вы вошли как пользователь';
@@ -225,7 +231,8 @@ function main_menu() {
 }
 
 function guest_menu() {
-    const main = document.getElementById('main');
+    const main = document.querySelector('body');
+    main.innerHTML = '';
     
     const div = makeEl('div', 'background-div');
     div.textContent = 'Вы вошли как гость';
