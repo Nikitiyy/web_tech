@@ -226,33 +226,53 @@ function main_menu() {
     main.innerHTML = '';
     
     const main_body = `
-    <div class="background-div">
-        <div class="form">
-            <h1>ГЛАВНАЯ СТРАНИЦА</h1>
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Музыкальный Магазин</h1>
+            <nav class="header-nav">
+                <button type="button" id="button_profile" class="button button-header">
+                    Профиль
+                </button>
+                <button type="button" id="button_logout" class="button button-header">
+                    Выйти
+                </button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Добро пожаловать!</h2>
+                <p>Добро пожаловать в каталог товаров музыкального магазина!</p>
+            </div>
             
-            <h2>Добро пожаловать в каталог товаров музыкального магазина!</h2>
+            <section class="info-section">
+                <h3>О нашем магазине</h3>
+                <p>Наш магазин предлагает широкий ассортимент музыкальных инструментов и оборудования, доступный для покупки или предзаказа.</p>
+            </section>
             
-            <p>Наш магазин предлагает широкий ассортимент музыкальных инструментов и оборудования, доступный для покупки или предзаказа.</p>
+            <section class="features-section">
+                <h3>Мы предоставляем возможность:</h3>
+                <ul class="features-list">
+                    <li>Просматривать товары</li>
+                    <li>Бронировать выбранные товары</li>
+                    <li>Получать помощь от наших консультантов</li>
+                </ul>
+            </section>
             
-            <p>Мы предоставляем возможность:</p>
-            <ul>
-                <li>Просматривать товары</li>
-                <li>Бронировать товары</li>
-                <li>Получать помощь от наших консультантов</li>
-            </ul>
-
-            <button type="button" id="button_catalog" class="button">
-                Каталог товаров
-            </button>
-
-            <button type="button" id="button_profile" class="button">
-                Профиль
-            </button>
-
-            <button type="button" id="button_contact" class="button">
-                Связь с администраторами
-            </button>
-        </div>
+            <section class="actions-section">
+                <button type="button" id="button_catalog" class="button button-large">
+                    Каталог товаров
+                </button>
+                
+                <button type="button" id="button_contact" class="button button-large">
+                    Связь с администраторами
+                </button>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин. Все права защищены.</p>
+        </footer>
     </div>
     `;
     
@@ -274,6 +294,12 @@ function main_menu() {
     button_contact.onclick = () => {
         router('/contact');
         history.pushState({}, '', '/contact');
+    };
+
+    const button_logout = document.getElementById('button_logout');
+    button_logout.onclick = () => {
+        router('/');
+        history.pushState({}, '', '/');
     };
 }
 

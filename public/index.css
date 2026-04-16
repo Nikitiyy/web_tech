@@ -5,13 +5,13 @@
 }
 
 body {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .background-div {
@@ -186,6 +186,199 @@ select.input option {
     .input, .button {
         padding: 0.8em 1em;
         font-size: 0.95em;
+    }
+}
+
+/* Стили для главной страницы (main_menu) */
+.page-container {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em 2em;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+    color: #fff;
+    font-size: 1.8em;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-nav {
+    display: flex;
+    gap: 1em;
+}
+
+.button-header {
+    padding: 0.7em 1.5em;
+    min-width: 120px;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2em 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.welcome-section {
+    text-align: center;
+    padding: 2em 0;
+}
+
+.welcome-section h2 {
+    color: #e94560;
+    font-size: 2.5em;
+    font-weight: 600;
+    margin-bottom: 1em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-section p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2em;
+}
+
+.info-section, .features-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 2em;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-section h3, .features-section h3 {
+    color: #e94560;
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+.info-section p, .features-section p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.features-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1em;
+    margin-top: 1em;
+}
+
+.features-list li {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1em;
+    padding: 1em;
+    background: rgba(233, 69, 96, 0.1);
+    border-radius: 10px;
+    border-left: 4px solid #e94560;
+}
+
+.actions-section {
+    display: flex;
+    gap: 1.5em;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1em;
+}
+
+.button-large {
+    padding: 1.2em 2.5em;
+    font-size: 1.1em;
+    min-width: 200px;
+}
+
+#button_catalog {
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+}
+
+#button_catalog:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5);
+}
+
+#button_contact {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(15, 52, 96, 0.3);
+}
+
+#button_contact:hover {
+    background: linear-gradient(135deg, #16213e, #1a1a2e);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.footer {
+    text-align: center;
+    padding: 1.5em;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9em;
+}
+
+/* Адаптивность для главной страницы */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 1em;
+        padding: 1em;
+    }
+    
+    .logo {
+        font-size: 1.4em;
+    }
+    
+    .main-content {
+        padding: 1.5em;
+    }
+    
+    .welcome-section h2 {
+        font-size: 1.8em;
+    }
+    
+    .welcome-section p {
+        font-size: 1em;
+    }
+    
+    .features-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .actions-section {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .button-large {
+        width: 100%;
+        max-width: 300px;
     }
 }
 
