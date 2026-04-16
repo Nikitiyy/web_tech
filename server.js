@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const path = require('path');
+const bcrypt = require('bcrypt');
 const pool = require('./db');
 
 app.use(express.json()); 
@@ -10,15 +11,38 @@ app.post('/api/login', async (req, res) => {
 
     const { login, password, role } = req.body;
     try {
-        const [rows] = await pool.query(
-            'SELECT * FROM users WHERE login = ? AND password = ? AND role = ?',
-            [login, password, role]
-        );
-        
-        if (rows.length > 0) {
-            res.json({ success: true, user: rows[0] });
+        if (role === 'admin') {
+            const [rows] = await pool.query(
+                'SELECT * FROM admins WHERE login = ?',
+                [login]
+            );
+            
+            if (rows.length > 0) {
+                const valid = await bcrypt.compare(password, rows[0].password);
+                if (valid) {
+                    res.json({ success: true, user: rows[0] });
+                } else {
+                    res.json({ success: false});
+                }
+            } else {
+                res.json({ success: false});
+            }
         } else {
-            res.json({ success: false});
+            const [rows] = await pool.query(
+                'SELECT * FROM users WHERE login = ?',
+                [login]
+            );
+            
+            if (rows.length > 0) {
+                const valid = await bcrypt.compare(password, rows[0].password);
+                if (valid) {
+                    res.json({ success: true, user: rows[0] });
+                } else {
+                    res.json({ success: false});
+                }
+            } else {
+                res.json({ success: false});
+            }
         }
     } catch (err) {
         console.error(err);
@@ -37,9 +61,11 @@ app.post('/api/reg', async (req, res) => {
             return res.json({ success: false});
         } 
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         await pool.query(
-            'INSERT INTO users (login, email, password, role) VALUES (?, ?, ?, ?)',
-            [login, email, password, 'user']
+            'INSERT INTO users (login, email, password) VALUES (?, ?, ?)',
+            [login, email, hashedPassword]
         );
 
         res.json({

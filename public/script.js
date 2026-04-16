@@ -54,6 +54,10 @@ function login() {
                 Гость
             </button>
 
+            <button type="button" id="button_recovery" class="button">
+                Восстановить пароль
+            </button>
+
         </form>
     </div>
     `;
