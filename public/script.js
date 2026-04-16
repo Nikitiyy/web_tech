@@ -414,9 +414,82 @@ function main_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';
     
-    const div = makeEl('div', 'background-div');
-    div.textContent = 'Вы вошли как пользователь';
-    main.appendChild(div);
+    const main_body = `
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Музыкальный Магазин</h1>
+            <nav class="header-nav">
+                <button type="button" id="button_profile" class="button button-header">
+                    Профиль
+                </button>
+                <button type="button" id="button_logout" class="button button-header">
+                    Выйти
+                </button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Добро пожаловать!</h2>
+                <p>Добро пожаловать в каталог товаров музыкального магазина!</p>
+            </div>
+            
+            <section class="info-section">
+                <h3>О нашем магазине</h3>
+                <p>Наш магазин предлагает широкий ассортимент музыкальных инструментов и оборудования, доступный для покупки или предзаказа.</p>
+            </section>
+            
+            <section class="features-section">
+                <h3>Мы предоставляем возможность:</h3>
+                <ul class="features-list">
+                    <li>Просматривать товары</li>
+                    <li>Бронировать выбранные товары</li>
+                    <li>Получать помощь от наших консультантов</li>
+                </ul>
+            </section>
+            
+            <section class="actions-section">
+                <button type="button" id="button_catalog" class="button button-large">
+                    Каталог товаров
+                </button>
+                
+                <button type="button" id="button_contact" class="button button-large">
+                    Связь с администраторами
+                </button>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин. Все права защищены.</p>
+        </footer>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+
+    const button_catalog = document.getElementById('button_catalog');
+    button_catalog.onclick = () => {
+        router('/categories');
+        history.pushState({}, '', '/categories');
+    };
+
+    const button_profile = document.getElementById('button_profile');
+    button_profile.onclick = () => {
+        router('/profile');
+        history.pushState({}, '', '/profile');
+    };
+
+    const button_contact = document.getElementById('button_contact');
+    button_contact.onclick = () => {
+        router('/contact');
+        history.pushState({}, '', '/contact');
+    };
+
+    const button_logout = document.getElementById('button_logout');
+    button_logout.onclick = () => {
+        router('/');
+        history.pushState({}, '', '/');
+    };
 }
 
 function guest_menu() {
