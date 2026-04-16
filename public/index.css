@@ -163,13 +163,20 @@ select.input option {
     margin: 0 !important;
     padding: 1em 1.5em !important;
     border-radius: 12px !important;
-    background: linear-gradient(135deg, #e94560, #ff6b6b) !important;
     color: #fff !important;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     font-size: 1em !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     z-index: 9999 !important;
     min-width: 280px;
+}
+
+.toastify-success {
+    background: linear-gradient(135deg, #00b09b, #96c93d) !important;
+}
+
+.toastify-error {
+    background: linear-gradient(135deg, #e94560, #ff6b6b) !important;
 }
 
 /* Адаптивность для мобильных устройств */
