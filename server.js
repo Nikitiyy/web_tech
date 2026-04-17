@@ -21,7 +21,14 @@ app.post('/api/login', async (req, res) => {
             if (rows.length > 0) {
                 const valid = await bcrypt.compare(password, rows[0].password);
                 if (valid) {
-                    res.json({ success: true, user: rows[0] });
+                    res.json({ 
+                        success: true, 
+                        user: { 
+                            id: rows[0].id,
+                            login: rows[0].login,
+                            role: 'admin'
+                        } 
+                    });
                 } else {
                     res.json({ success: false});
                 }
@@ -37,7 +44,15 @@ app.post('/api/login', async (req, res) => {
             if (rows.length > 0) {
                 const valid = await bcrypt.compare(password, rows[0].password);
                 if (valid) {
-                    res.json({ success: true, user: rows[0] });
+                    res.json({ 
+                        success: true, 
+                        user: { 
+                            id: rows[0].id,
+                            login: rows[0].login,
+                            email: rows[0].email,
+                            role: 'user'
+                        } 
+                    });
                 } else {
                     res.json({ success: false});
                 }
@@ -154,6 +169,33 @@ app.post('/api/reg', async (req, res) => {
 
     } catch (err) {
         console.error('Ошибка регистрации:', err); 
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.get('/api/products', async (req, res) => {
+    const category = req.query.category;
+
+    try {
+        let query;
+        let params;
+
+        if(category === 'all' || !category) {
+            query = 'SELECT * FROM products WHERE is_available = TRUE';
+            params = [];
+        } else {
+            query = `
+                SELECT p.* FROM products p
+                JOIN categories c ON p.category_id = c.id
+                WHERE c.slug = ? AND p.is_available = TRUE
+            `;
+            params = [category];
+        }
+        const [rows] = await pool.query(query, params);
+        
+        res.json({ success: true, products: rows });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, message: 'Ошибка сервера' });
     }
 });

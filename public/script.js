@@ -3,7 +3,18 @@ window.addEventListener('popstate', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    router(location.pathname);
+    // Проверка авторизации при загрузке страницы
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userRole = localStorage.getItem('userRole');
+    
+    // Если авторизован и находится на странице входа - перенаправляем
+    if (isLoggedIn && (location.pathname === '/' || location.pathname === '/login')) {
+        const redirectPath = userRole === 'admin' ? '/main_admin' : '/main_menu';
+        history.replaceState({}, '', redirectPath);
+        router(redirectPath);
+    } else {
+        router(location.pathname);
+    }
 });
 
 function makeEl(elem, classEl) {
@@ -85,6 +96,9 @@ function login() {
         });
         const result = await res.json();
         if(result.success) {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userRole', result.user.role);
+            
             if(result.user.role === 'admin') {
                 router('/main_admin');                   
                 history.pushState({}, '', '/main_admin');
@@ -121,7 +135,7 @@ function login() {
         history.pushState({}, '', '/recovery');
     }
 }
-
+    
 function recovery() {
     const main_body = `
     <div class="background-div">
@@ -289,8 +303,16 @@ function reset_password() {
                 position: 'right',
                 className: 'toastify-success'
             }).showToast();
-            router('/login');
-            history.pushState({}, '', '/login');
+            
+            // Перенаправляем в зависимости от роли
+            const userRole = localStorage.getItem('userRole');
+            if (userRole === 'admin') {
+                router('/main_admin');
+                history.pushState({}, '', '/main_admin');
+            } else {
+                router('/main_menu');
+                history.pushState({}, '', '/main_menu');
+            }
         } else {
             Toastify({
                 text: result.message || 'Неверный код или ошибка',
@@ -302,7 +324,7 @@ function reset_password() {
         }
     };
 }
-
+    
 function reg() {
     const main_body = `
     <div class="background-div">
@@ -375,6 +397,9 @@ function reg() {
         const result = await res.json();
 
         if(result.success) {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userRole', 'user');
+            
             router('/main_menu');
             history.pushState({}, '', '/main_menu');
         } else {
@@ -401,33 +426,37 @@ function reg() {
     };
 }
 
-function main_admin() {
+function main_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
-    const div = makeEl('div', 'background-div');
-    div.textContent = 'Вы вошли как администратор';
-    main.appendChild(div);
-}
-
-function main_menu() {
-    const main = document.querySelector('body');
-    main.innerHTML = '';
-    
     const main_body = `
     <div class="page-container">
         <header class="header">
             <h1 class="logo">Музыкальный Магазин</h1>
-            <nav class="header-nav">
-                <button type="button" id="button_profile" class="button button-header">
+            <div class="header-center">
+                <button type="button" id="button_catalog" class="button-header">
+                    Каталог
+                </button>
+                <div class="header-search">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="input-search" 
+                        placeholder="Поиск товаров..."
+                    >
+                </div>
+            </div>
+            <nav class="header-right">
+                <button type="button" id="button_profile" class="button-header">
                     Профиль
                 </button>
-                <button type="button" id="button_logout" class="button button-header">
+                <button type="button" id="button_logout" class="button-header">
                     Выйти
                 </button>
             </nav>
         </header>
-        
+            
         <main class="main-content">
             <div class="welcome-section">
                 <h2>Добро пожаловать!</h2>
@@ -447,16 +476,6 @@ function main_menu() {
                     <li>Получать помощь от наших консультантов</li>
                 </ul>
             </section>
-            
-            <section class="actions-section">
-                <button type="button" id="button_catalog" class="button button-large">
-                    Каталог товаров
-                </button>
-                
-                <button type="button" id="button_contact" class="button button-large">
-                    Связь с администраторами
-                </button>
-            </section>
         </main>
         
         <footer class="footer">
@@ -466,6 +485,12 @@ function main_menu() {
     `;
     
     main.innerHTML = main_body;
+
+    const searchInput = document.getElementById('search-input');
+    searchInput.oninput = () => {
+        const query = searchInput.value;
+        console.log('Поиск:', query);
+    };
 
     const button_catalog = document.getElementById('button_catalog');
     button_catalog.onclick = () => {
@@ -479,29 +504,327 @@ function main_menu() {
         history.pushState({}, '', '/profile');
     };
 
-    const button_contact = document.getElementById('button_contact');
-    button_contact.onclick = () => {
-        router('/contact');
-        history.pushState({}, '', '/contact');
-    };
-
     const button_logout = document.getElementById('button_logout');
     button_logout.onclick = () => {
+        // Очищаем состояние авторизации
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        
         router('/');
         history.pushState({}, '', '/');
     };
 }
 
-function guest_menu() {
+function categories() {
     const main = document.querySelector('body');
     main.innerHTML = '';
     
+    const main_body = `
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Музыкальный Магазин</h1>
+            <div class="header-center">
+                <button type="button" id="button_catalog" class="button-header">
+                    Каталог
+                </button>
+                <div class="header-search">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="input-search" 
+                        placeholder="Поиск товаров..."
+                    >
+                </div>
+            </div>
+            <nav class="header-right">
+                <button type="button" id="button_profile" class="button-header">
+                    Профиль
+                </button>
+                <button type="button" id="button_logout" class="button-header">
+                    Выйти
+                </button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Категории товаров</h2>
+            </div>
+            
+            <section class="categories-section">
+                <div class="category-item" data-category="all">
+                    <h3>Всё</h3>
+                    <p>Все товары магазина</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин. Все права защищены.</p>
+        </footer>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+
+    const allCategories = document.querySelectorAll('.category-item');
+    allCategories.forEach(item => {
+        item.onclick = () => {
+            const category = item.getAttribute('data-category');
+        
+            if (category === 'all') {
+                router('/products');
+                history.pushState({}, '', '/products');
+            } else {
+                router(`/products?category=${category}`);
+                history.pushState({}, '', `/products?category=${category}`);
+            }
+        };
+    });
+
+
+    const searchInput = document.getElementById('search-input');
+    searchInput.oninput = () => {
+        const query = searchInput.value;
+    };
+
+    const button_catalog = document.getElementById('button_catalog');
+    button_catalog.onclick = () => {
+        router('/categories');
+        history.pushState({}, '', '/categories');
+    };
+
+    const button_profile = document.getElementById('button_profile');
+    button_profile.onclick = () => {
+        router('/profile');
+        history.pushState({}, '', '/profile');
+    };
+
+    const button_logout = document.getElementById('button_logout');
+    button_logout.onclick = () => {
+        // Очищаем состояние авторизации
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        
+        router('/');
+        history.pushState({}, '', '/');
+    };
+}
+    
+function products() {
+    const main = document.querySelector('body');
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category') || 'all';
+    
+    const main_body = `
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Музыкальный Магазин</h1>
+            <div class="header-center">
+                <button type="button" id="button_catalog" class="button-header">Каталог</button>
+                <div class="header-search">
+                    <input type="text" id="search-input" class="input-search" placeholder="Поиск товаров...">
+                </div>
+            </div>
+            <nav class="header-right">
+                <button type="button" id="button_profile" class="button-header">Профиль</button>
+                <button type="button" id="button_logout" class="button-header">Выйти</button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Товары</h2>
+            </div>
+            
+            <section class="products-section" id="products-container">
+                <!-- Товары загрузятся сюда -->
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин</p>
+        </footer>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+    
+    const button_catalog = document.getElementById('button_catalog');
+    button_catalog.onclick = () => {
+        router('/categories');
+        history.pushState({}, '', '/categories');
+    };
+
+    const button_profile = document.getElementById('button_profile');
+    button_profile.onclick = () => {
+        router('/profile');
+        history.pushState({}, '', '/profile');
+    };
+
+    const button_logout = document.getElementById('button_logout');
+    button_logout.onclick = () => {
+        // Очищаем состояние авторизации
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        
+        router('/');
+        history.pushState({}, '', '/');
+    };
+    
+    const searchInput = document.getElementById('search-input');
+    searchInput.oninput = () => {
+        const query = searchInput.value;
+    };
+    
+    loadProducts(category);
+}
+
+async function loadProducts(category) {
+    const container = document.getElementById('products-container');
+    container.innerHTML = '<p>Загрузка...</p>';
+    
+    try {
+        const res = await fetch(`/api/products?category=${category}`);
+        const result = await res.json();
+        
+        if (result.success && result.products.length > 0) {
+            container.innerHTML = result.products.map(product => `
+                <div class="product-card">
+                    <img src="${product.image_url}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p class="product-desc">${product.description}</p>
+                    <p class="product-price">${product.price} BYN</p>
+                    <button class="button-add-to-cart">В корзину</button>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p>Товары не найдены</p>';
+        }
+    } catch (err) {
+        container.innerHTML = '<p>Ошибка загрузки товаров</p>';
+    }
+}
+    
+function admin_menu() {
+    const main = document.querySelector('body');
+    main.innerHTML = '';    
+
+    const main_body = `
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Админ Панель</h1>
+            <nav class="header-right">
+                <button type="button" id="button_profile" class="button-header">
+                    Профиль
+                </button>
+                <button type="button" id="button_logout" class="button-header">
+                    Выйти
+                </button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Панель администратора</h2>
+                <p>Управление товарами и администраторами</p>
+            </div>
+            
+            <section class="admin-section">
+                <div class="admin-card" id="admin-products">
+                    <h3>📦 Товары</h3>
+                    <p>Управление ассортиментом товаров</p>
+                </div>
+                
+                <div class="admin-card" id="admin-add-products">
+                    <h3>➕ Добавить товар</h3>
+                    <p>Создание нового товара</p>
+                </div>
+                
+                <div class="admin-card" id="admin-admins">
+                    <h3>👥 Администраторы</h3>
+                    <p>Список администраторов</p>
+                </div>
+                
+                <div class="admin-card" id="admin-add-admin">
+                    <h3>➕ Добавить админа</h3>
+                    <p>Создание нового администратора</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин</p>
+        </footer>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+    
+    const button_profile = document.getElementById('button_profile');
+    button_profile.onclick = () => {
+        router('/profile');
+        history.pushState({}, '', '/profile');
+    };
+    
+    const button_logout = document.getElementById('button_logout');
+    button_logout.onclick = () => {
+        // Очищаем состояние авторизации
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        
+        router('/');
+        history.pushState({}, '', '/');
+    };
+    
+    const adminProducts = document.getElementById('admin-products');
+    adminProducts.onclick = () => {
+        router('/admin-products');
+        history.pushState({}, '', '/admin-products');
+    };
+    
+    const adminAddProducts = document.getElementById('admin-add-products');
+    adminAddProducts.onclick = () => {
+        router('/admin-add-products');
+        history.pushState({}, '', '/admin-add-products');
+    };
+    
+    const adminAdmins = document.getElementById('admin-admins');
+    adminAdmins.onclick = () => {
+        router('/admin-admins');
+        history.pushState({}, '', '/admin-admins');
+    };
+    
+    const adminAddAdmin = document.getElementById('admin-add-admin');
+    adminAddAdmin.onclick = () => {
+        router('/admin-add-admin');
+        history.pushState({}, '', '/admin-add-admin');
+    };
+}
+
+
+
+function guest_menu() {
+    const main = document.querySelector('body');
+    main.innerHTML = '';    
+
     const div = makeEl('div', 'background-div');
     div.textContent = 'Вы вошли как гость';
     main.appendChild(div);
 }
 
 function router(path) {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userRole = localStorage.getItem('userRole');
+    
+    if ((path === '/' || path === '/login') && isLoggedIn) {
+        if (userRole === 'admin') {
+            path = '/main_admin';
+        } else {
+            path = '/main_menu';
+        }
+    }
+    
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
@@ -523,10 +846,6 @@ function router(path) {
             reg();
             break;
         }
-        case '/main_admin': {
-            main_admin();
-            break;
-        }
         case '/main_menu': {
             main_menu();
             break;
@@ -535,7 +854,19 @@ function router(path) {
             guest_menu();
             break;
         }
+        case '/categories': {
+            categories();
+            break;
+        }
+        case '/main_admin': {
+            admin_menu();
+            break;
+        }
+    }
 
+    if (path.startsWith('/products')) {
+        products();
+        return;
     }
 }
 
