@@ -104,6 +104,13 @@ app.post('/api/reset-password', async (req, res) => {
     const { code, newPassword } = req.body;
     
     try {
+
+        if(newPassword.length < 6) {
+            return res.json({ 
+                success: false, 
+                message: 'Пароль должен состоять из 6 и более символов' 
+            });
+        }
         // Получаем email пользователя по коду
         const [resetRows] = await pool.query(
             'SELECT * FROM reset_codes WHERE code = ? AND expires_at > ?',
@@ -125,11 +132,8 @@ app.post('/api/reset-password', async (req, res) => {
         if (userRows.length === 0) {
             return res.json({ success: false, message: 'Пользователь не найден' });
         }
-        
-        // Хэшируем новый пароль
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         
-        // Обновляем пароль
         await pool.query(
             'UPDATE users SET password = ? WHERE email = ?',
             [hashedPassword, email]
@@ -148,12 +152,22 @@ app.post('/api/reset-password', async (req, res) => {
 app.post('/api/reg', async (req, res) => {
     const { login, email, password } = req.body;
     try {
+        // Проверка длины пароля
+        if (!password || password.length < 6) {
+            return res.json({ success: false, message: 'Пароль должен содержать минимум 6 символов' });
+        }
+        
+        // Проверка длины логина
+        if (!login || login.length < 3) {
+            return res.json({ success: false, message: 'Логин должен содержать минимум 3 символа' });
+        }
+        
         const [rows] = await pool.query(
             'SELECT * FROM users WHERE login = ? OR email = ?',
             [login, email]
         );
         if (rows.length > 0) {
-            return res.json({ success: false});
+            return res.json({ success: false, message: 'Пользователь уже существует' });
         } 
 
         const hashedPassword = await bcrypt.hash(password, 10);
