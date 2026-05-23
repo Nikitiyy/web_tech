@@ -1,4 +1,6 @@
-function main_menu() {
+// router доступен через window.router
+
+export function main_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
@@ -66,24 +68,25 @@ function main_menu() {
 
     const button_catalog = document.getElementById('button_catalog');
     button_catalog.onclick = () => {
-        router('/categories');
+        window.router('/categories');
         history.pushState({}, '', '/categories');
     };
 
     const button_profile = document.getElementById('button_profile');
     button_profile.onclick = () => {
-        router('/profile');
+        window.router('/profile');
         history.pushState({}, '', '/profile');
     };
 
     const button_logout = document.getElementById('button_logout');
-    button_logout.onclick = () => {        
-        router('/');
+    button_logout.onclick = async () => {        
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+        window.router('/');
         history.pushState({}, '', '/');
     };
 }
 
-function categories() {
+export function categories() {
     const main = document.querySelector('body');
     main.innerHTML = '';
     
@@ -141,10 +144,10 @@ function categories() {
             const category = item.getAttribute('data-category');
         
             if (category === 'all') {
-                router('/products');
+                window.router('/products');
                 history.pushState({}, '', '/products');
             } else {
-                router(`/products?category=${category}`);
+                window.router(`/products?category=${category}`);
                 history.pushState({}, '', `/products?category=${category}`);
             }
         };
@@ -158,19 +161,20 @@ function categories() {
 
     const button_catalog = document.getElementById('button_catalog');
     button_catalog.onclick = () => {
-        router('/categories');
+        window.router('/categories');
         history.pushState({}, '', '/categories');
     };
 
     const button_profile = document.getElementById('button_profile');
     button_profile.onclick = () => {
-        router('/profile');
+        window.router('/profile');
         history.pushState({}, '', '/profile');
     };
 
     const button_logout = document.getElementById('button_logout');
-    button_logout.onclick = () => {
-        router('/');
+    button_logout.onclick = async () => {
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+        window.router('/');
         history.pushState({}, '', '/');
     };
 }

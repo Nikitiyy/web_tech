@@ -4,8 +4,20 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const pool = require('./db');
 const sendCode = require('./mail');
+const session = require('express-session');
 
 app.use(express.json()); 
+
+app.use(session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 3600000,
+        httpOnly: true
+    }
+}));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/login', async (req, res) => {
@@ -21,6 +33,9 @@ app.post('/api/login', async (req, res) => {
             if (rows.length > 0) {
                 const valid = await bcrypt.compare(password, rows[0].password);
                 if (valid) {
+                    req.session.userId = rows[0].id;
+                    req.session.role = 'admin';
+
                     res.json({ 
                         success: true, 
                         user: { 
@@ -44,6 +59,9 @@ app.post('/api/login', async (req, res) => {
             if (rows.length > 0) {
                 const valid = await bcrypt.compare(password, rows[0].password);
                 if (valid) {
+                    req.session.userId = rows[0].id;
+                    req.session.role = 'user';
+
                     res.json({ 
                         success: true, 
                         user: { 
@@ -177,6 +195,14 @@ app.post('/api/reg', async (req, res) => {
             [login, email, hashedPassword]
         );
 
+        const [newUser] = await pool.query(
+            'SELECT id FROM users WHERE login = ?',
+            [login]
+        );
+        
+        req.session.userId = newUser[0].id;
+        req.session.role = 'user';
+
         res.json({
             success: true
         });
@@ -186,6 +212,26 @@ app.post('/api/reg', async (req, res) => {
         res.status(500).json({ success: false, message: 'Ошибка сервера' });
     }
 });
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if(err) {
+            return res.status(500).json({ success: false, message: 'Ошибка сервера' });
+        }
+        res.clearCookie('connect-sid');
+        res.json({ success: true });
+    });//--------------------------------------------------------------------------------------------------------
+});
+
+app.get('/api/check-auth', (req, res) => {
+    if (req.session.userId) {
+        res.json({ success: true, isLoggedIn: true, role: req.session.role });
+    } else {
+        res.json({ success: true, isLoggedIn: false });
+    }
+});
+
+
 
 app.get('/api/products', async (req, res) => {
     const category = req.query.category;
@@ -213,6 +259,9 @@ app.get('/api/products', async (req, res) => {
         res.status(500).json({ success: false, message: 'Ошибка сервера' });
     }
 });
+
+
+
 
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));

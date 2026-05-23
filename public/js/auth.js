@@ -1,4 +1,6 @@
-function login() {
+// router доступен через window.router
+
+export function login() {
     const main_body = `
     
     <div class="background-div">
@@ -67,16 +69,17 @@ function login() {
             headers: {
                 'Content-type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify(data)
         });
         const result = await res.json();
         if(result.success) {
             if(result.user.role === 'admin') {
-                router('/main_admin');                   
-                history.pushState({}, '', '/main_admin');
+                window.router('/main_admin');                   
+                history.replaceState({}, '', '/main_admin');
             } else {
-                router('/main_menu');
-                history.pushState({}, '', '/main_menu');
+                window.router('/main_menu');
+                history.replaceState({}, '', '/main_menu');
             }
         } else {
             Toastify({
@@ -91,24 +94,24 @@ function login() {
     //registration_button
     const button_reg = document.getElementById('button_reg');
     button_reg.onclick = () => {
-        router('/reg');                   
+        window.router('/reg');                   
         history.pushState({}, '', '/reg');
     };
     //enter_guest
     const button_guest = document.getElementById('button_guest');
     button_guest.onclick = () => {
-        router('/main_menu');
+        window.router('/main_menu');
         history.pushState({}, '', '/main_menu');
     }
     //recovery_button
     const button_recovery = document.getElementById('button_recovery');
     button_recovery.onclick = () => {
-        router('/recovery');
+        window.router('/recovery');
         history.pushState({}, '', '/recovery');
     }
 }
     
-function recovery() {
+export function recovery() {
     const main_body = `
     <div class="background-div">
         <form class="form">
@@ -139,7 +142,7 @@ function recovery() {
 
     const button_back = document.getElementById('button_back');
     button_back.onclick = () => {
-        router('/login');
+        window.router('/login');
         history.pushState({}, '', '/login');
     }
 
@@ -155,11 +158,12 @@ function recovery() {
             headers: {
                 'Content-type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify(data)
         });
         const result = await res.json();
         if(result.success) {
-            router('/reset-password');
+            window.router('/reset-password');
             history.pushState({}, '', '/reset-password');
         } else {
         Toastify({
@@ -173,7 +177,7 @@ function recovery() {
     }
 }
     
-function reset_password() {
+export function reset_password() {
     const main_body = `
     <div class="background-div">
         <form class="form">
@@ -222,7 +226,7 @@ function reset_password() {
 
     const button_back = document.getElementById('button_back');
     button_back.onclick = () => {
-        router('/recovery');
+        window.router('/recovery');
         history.pushState({}, '', '/recovery');
     }
 
@@ -274,6 +278,7 @@ function reset_password() {
             headers: {
                 'Content-type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ code, newPassword })
         });
 
@@ -286,8 +291,8 @@ function reset_password() {
                 position: 'right',
                 className: 'toastify-success'
             }).showToast();
-            router('/main_menu');
-            history.pushState({}, '', '/main_menu');
+            window.router('/main_menu');
+            history.replaceState({}, '', '/main_menu');
     
         } else {
             Toastify({
@@ -301,7 +306,7 @@ function reset_password() {
     };
 }
     
-function reg() {
+export function reg() {
     const main_body = `
     <div class="background-div">
         <form class="form" method="POST">
@@ -396,14 +401,15 @@ function reg() {
             headers: {
                 'Content-type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify(data)
         });
 
         const result = await res.json();
 
         if(result.success) {
-            router('/main_menu');
-            history.pushState({}, '', '/main_menu');
+            window.router('/main_menu');
+            history.replaceState({}, '', '/main_menu');
         } else {
             Toastify({
                 text: result.message || 'Ошибка регистрации',
@@ -417,13 +423,13 @@ function reg() {
 
     const button_reg = document.getElementById('button_reg');
     button_reg.onclick = () => {
-        router('/login');
+        window.router('/login');
         history.pushState({}, '', '/login');
     };
 
     const button_guest = document.getElementById('button_guest');
     button_guest.onclick = () => {
-        router('/guest_menu');
-        history.pushState({}, '', '/guest_menu');
+        window.router('/main_menu');
+        history.replaceState({}, '', '/main_menu');
     };
 }

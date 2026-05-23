@@ -1,4 +1,5 @@
-function admin_menu() {
+
+export function admin_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
@@ -55,37 +56,38 @@ function admin_menu() {
     
     const button_profile = document.getElementById('button_profile');
     button_profile.onclick = () => {
-        router('/profile');
+        window.router('/profile');
         history.pushState({}, '', '/profile');
     };
     
     const button_logout = document.getElementById('button_logout');
-    button_logout.onclick = () => {        
-        router('/');
+    button_logout.onclick = async () => {        
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+        window.router('/');
         history.pushState({}, '', '/');
     };
     
     const adminProducts = document.getElementById('admin-products');
     adminProducts.onclick = () => {
-        router('/admin-products');
+        window.router('/admin-products');
         history.pushState({}, '', '/admin-products');
     };
     
     const adminAddProducts = document.getElementById('admin-add-products');
     adminAddProducts.onclick = () => {
-        router('/admin-add-products');
+        window.router('/admin-add-products');
         history.pushState({}, '', '/admin-add-products');
     };
     
     const adminAdmins = document.getElementById('admin-admins');
     adminAdmins.onclick = () => {
-        router('/admin-admins');
+        window.router('/admin-admins');
         history.pushState({}, '', '/admin-admins');
     };
     
     const adminAddAdmin = document.getElementById('admin-add-admin');
     adminAddAdmin.onclick = () => {
-        router('/admin-add-admin');
+        window.router('/admin-add-admin');
         history.pushState({}, '', '/admin-add-admin');
     };
 }

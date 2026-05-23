@@ -1,4 +1,6 @@
-function products() {
+// router доступен через window.router
+
+export function products() {
     const main = document.querySelector('body');
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('category') || 'all';
@@ -39,19 +41,20 @@ function products() {
     
     const button_catalog = document.getElementById('button_catalog');
     button_catalog.onclick = () => {
-        router('/categories');
+        window.window.router('/categories');
         history.pushState({}, '', '/categories');
     };
 
     const button_profile = document.getElementById('button_profile');
     button_profile.onclick = () => {
-        router('/profile');
+        window.window.router('/profile');
         history.pushState({}, '', '/profile');
     };
 
     const button_logout = document.getElementById('button_logout');
-    button_logout.onclick = () => {        
-        router('/');
+    button_logout.onclick = async () => {        
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+        window.window.router('/');
         history.pushState({}, '', '/');
     };
     
@@ -68,7 +71,9 @@ async function loadProducts(category) {
     container.innerHTML = '<p>Загрузка...</p>';
     
     try {
-        const res = await fetch(`/api/products?category=${category}`);
+        const res = await fetch(`/api/products?category=${category}`, {
+            credentials: 'same-origin'
+        });
         const result = await res.json();
         
         if (result.success && result.products.length > 0) {

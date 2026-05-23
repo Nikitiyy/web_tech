@@ -1,4 +1,9 @@
-function router(path) {
+import { login, recovery, reset_password, reg } from './auth.js';
+import { main_menu, categories } from './menu.js';
+import { admin_menu } from './admin.js';
+import { products } from './products.js';
+
+export function router(path) {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
@@ -22,7 +27,6 @@ function router(path) {
             break;
         }
         case '/main_menu': {
-            console.log('main_menu');
             main_menu();
             break;
         }
