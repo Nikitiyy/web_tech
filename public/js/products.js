@@ -16,6 +16,7 @@ export function products() {
                 </div>
             </div>
             <nav class="header-right">
+                <button type="button" id="button_back" class="button-header">← Назад</button>
                 <button type="button" id="button_profile" class="button-header">Профиль</button>
                 <button type="button" id="button_logout" class="button-header">Выйти</button>
             </nav>
@@ -56,6 +57,11 @@ export function products() {
         await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
         window.window.router('/');
         history.pushState({}, '', '/');
+    };
+    
+    const button_back = document.getElementById('button_back');
+    button_back.onclick = () => {
+        history.back();
     };
     
     const searchInput = document.getElementById('search-input');

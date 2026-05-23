@@ -106,6 +106,9 @@ export function categories() {
                 </div>
             </div>
             <nav class="header-right">
+                <button type="button" id="button_back" class="button-header">
+                    ← Назад
+                </button>
                 <button type="button" id="button_profile" class="button-header">
                     Профиль
                 </button>
@@ -174,6 +177,11 @@ export function categories() {
         await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
         window.router('/');
         history.pushState({}, '', '/');
+    };
+
+    const button_back = document.getElementById('button_back');
+    button_back.onclick = () => {
+        history.back();
     };
 }
 

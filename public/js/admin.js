@@ -8,6 +8,9 @@ export function admin_menu() {
         <header class="header">
             <h1 class="logo">Админ Панель</h1>
             <nav class="header-right">
+                <button type="button" id="button_back" class="button-header">
+                    ← Назад
+                </button>
                 <button type="button" id="button_profile" class="button-header">
                     Профиль
                 </button>
@@ -65,6 +68,11 @@ export function admin_menu() {
         await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
         window.router('/');
         history.pushState({}, '', '/');
+    };
+    
+    const button_back = document.getElementById('button_back');
+    button_back.onclick = () => {
+        history.back();
     };
     
     const adminProducts = document.getElementById('admin-products');
