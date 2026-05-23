@@ -1,5 +1,5 @@
 import { login, recovery, reset_password, reg } from './auth.js';
-import { main_menu, categories } from './menu.js';
+import { main_menu, categories, profile } from './menu.js';
 import { admin_menu } from './admin.js';
 import { products } from './products.js';
 
@@ -40,6 +40,10 @@ export function router(path) {
         }
         case '/main_admin': {
             admin_menu();
+            break;
+        }
+        case '/profile': {
+            profile();
             break;
         }
     }

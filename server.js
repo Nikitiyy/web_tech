@@ -220,7 +220,7 @@ app.post('/api/logout', (req, res) => {
         }
         res.clearCookie('connect-sid');
         res.json({ success: true });
-    });//--------------------------------------------------------------------------------------------------------
+    });
 });
 
 app.get('/api/check-auth', (req, res) => {
@@ -239,7 +239,7 @@ app.get('/api/products', async (req, res) => {
     try {
         let query;
         let params;
-
+        console.log('one');
         if(category === 'all' || !category) {
             query = 'SELECT * FROM products WHERE is_available = TRUE';
             params = [];
@@ -260,7 +260,35 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
+app.get('/api/profile', async (req, res) => {
+    if(!req.session.userId){
+        return res.status(401).json({
+            success: false,
+            message: 'Требуется авторизация'
+        })
+    }
+    
+    const [rows] = await pool.query(
+        'SELECT login, email FROM users WHERE id = ?',
+        [req.session.userId]
+    );
 
+    if(rows.length === 0){
+        return res.status(401).json({
+            success: false,
+            message: 'Пользовател не найден'
+        })
+    }
+
+    res.json({
+        success: true,
+        user: {
+            login: rows[0].login,
+            email: rows[0].email,
+            role: req.session.role
+        }
+    })
+});
 
 
 app.use((req, res) => {
