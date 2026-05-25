@@ -5,6 +5,37 @@ const bcrypt = require('bcrypt');
 const pool = require('./db');
 const sendCode = require('./mail');
 const session = require('express-session');
+const multer = require('multer');
+const fs = require('fs');
+
+// Создаём папку uploads если её нет
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Настройка multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Только изображения!'), false);
+        }
+    }
+});
 
 app.use(express.json()); 
 
@@ -94,7 +125,7 @@ app.post('/api/recovery', async (req, res) => {
         if (rows.length > 0) {
             // Генерация 6-значного кода (100000 - 999999)
             const code = Math.floor(100000 + Math.random() * 900000).toString();
-            
+
             // Время истечения: текущее время + 15 минут
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
             
@@ -120,7 +151,7 @@ app.post('/api/recovery', async (req, res) => {
 
 app.post('/api/reset-password', async (req, res) => {
     const { code, newPassword } = req.body;
-    
+
     try {
 
         if(newPassword.length < 6) {
@@ -233,6 +264,149 @@ app.get('/api/check-auth', (req, res) => {
 
 
 
+app.get('/api/categories', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM categories ORDER BY display_order');
+        res.json({ success: true, categories: rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/categories', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    const { name, slug, display_order } = req.body;
+
+    try {
+        if (!name || !slug) {
+            return res.json({ success: false, message: 'Название и slug обязательны' });
+        }
+
+        const [result] = await pool.query(
+            'INSERT INTO categories (name, slug, display_order) VALUES (?, ?, ?)',
+            [name.trim(), slug.trim(), display_order || 0]
+        );
+
+        res.json({ success: true, categoryId: result.insertId, message: 'Категория добавлена' });
+    } catch (err) {
+        console.error('Ошибка добавления категории:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.delete('/api/categories/:id', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    const { id } = req.params;
+
+    try {
+        // Проверяем, есть ли товары в этой категории
+        const [products] = await pool.query('SELECT COUNT(*) as count FROM products WHERE category_id = ?', [id]);
+        if (products[0].count > 0) {
+            return res.json({ success: false, message: 'Нельзя удалить категорию с товарами' });
+        }
+
+        await pool.query('DELETE FROM categories WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Категория удалена' });
+    } catch (err) {
+        console.error('Ошибка удаления категории:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    const { id } = req.params;
+
+    try {
+        // Получаем товар чтобы удалить файл
+        const [rows] = await pool.query('SELECT image_url FROM products WHERE id = ?', [id]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Товар не найден' });
+        }
+
+        const image_url = rows[0].image_url;
+        
+        // Удаляем файл если он есть
+        if (image_url && image_url.startsWith('/uploads/')) {
+            const filePath = path.join(__dirname, 'public', image_url.substring(1));
+            try {
+                fs.unlinkSync(filePath);
+            } catch (err) {
+                console.error('Не удалось удалить файл:', err);
+            }
+        }
+
+        // Удаляем запись из БД
+        await pool.query('DELETE FROM products WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Товар удалён' });
+    } catch (err) {
+        console.error('Ошибка удаления товара:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/products', upload.single('image'), async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        // Удаляем загруженный файл если доступ запрещён
+        if (req.file) {
+            fs.unlinkSync(req.file.path);
+        }
+        return res.status(403).json({ 
+            success: false,
+            message: 'Доступ запрещён' 
+        });
+    }
+
+    const { name, description, price, category_id, is_available } = req.body;
+    const image_url = req.file ? '/uploads/' + req.file.filename : '';
+
+    try {
+        // Валидация
+        if (!name || name.trim().length === 0) {
+            if (req.file) fs.unlinkSync(req.file.path);
+            return res.json({ success: false, message: 'Название товара обязательно' });
+        }
+        if (!price || parseFloat(price) <= 0) {
+            if (req.file) fs.unlinkSync(req.file.path);
+            return res.json({ success: false, message: 'Цена должна быть больше 0' });
+        }
+        if (!category_id) {
+            if (req.file) fs.unlinkSync(req.file.path);
+            return res.json({ success: false, message: 'Выберите категорию' });
+        }
+        if (!req.file) {
+            return res.json({ success: false, message: 'Загрузите изображение товара' });
+        }
+
+        const [result] = await pool.query(
+            `INSERT INTO products (name, description, price, category_id, image_url, is_available) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name.trim(), description.trim(), parseFloat(price), parseInt(category_id), image_url, is_available === 'true' ? 1 : 0]
+        );
+
+        res.json({
+            success: true,
+            productId: result.insertId,
+            message: 'Товар успешно добавлен' 
+        });
+    } catch (err) {
+        if (req.file) fs.unlinkSync(req.file.path);
+        console.error('Ошибка добавления товара:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
 app.get('/api/products', async (req, res) => {
     const category = req.query.category;
 
@@ -252,7 +426,7 @@ app.get('/api/products', async (req, res) => {
             params = [category];
         }
         const [rows] = await pool.query(query, params);
-        
+
         res.json({ success: true, products: rows });
     } catch (err) {
         console.error(err);
@@ -261,33 +435,47 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.get('/api/profile', async (req, res) => {
-    if(!req.session.userId){
+    if (!req.session.userId) {
         return res.status(401).json({
             success: false,
             message: 'Требуется авторизация'
-        })
-    }
-    
-    const [rows] = await pool.query(
-        'SELECT login, email FROM users WHERE id = ?',
-        [req.session.userId]
-    );
-
-    if(rows.length === 0){
-        return res.status(401).json({
-            success: false,
-            message: 'Пользовател не найден'
-        })
+        });
     }
 
-    res.json({
-        success: true,
-        user: {
-            login: rows[0].login,
-            email: rows[0].email,
-            role: req.session.role
+    try {
+        let rows;
+
+        if (req.session.role === 'admin') {
+            [rows] = await pool.query(
+                'SELECT login FROM admins WHERE id = ?',
+                [req.session.userId]
+            );
+        } else {
+            [rows] = await pool.query(
+                'SELECT login, email FROM users WHERE id = ?',
+                [req.session.userId]
+            );
         }
-    })
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Пользователь не найден'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                login: rows[0].login,
+                email: rows[0].email || null,
+                role: req.session.role
+            }
+        });
+    } catch (err) {
+        console.error('Ошибка профиля:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
 });
 
 
