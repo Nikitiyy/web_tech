@@ -179,17 +179,13 @@ async function loadUserCategories() {
         const res = await fetch('/api/categories', { credentials: 'same-origin' });
         const result = await res.json();
         
-        console.log('Категории с сервера:', result);
-        
         if (!result.success || !result.categories || result.categories.length === 0) {
-            console.log('Категории пустые или ошибка');
             return;
         }
         
         const categories = result.categories;
         const parentMap = new Map();
         
-        // Группируем категории по parent_id (ключи — строки!)
         categories.forEach(cat => {
             const parentId = cat.parent_id !== null ? String(cat.parent_id) : 'root';
             if (!parentMap.has(parentId)) {
@@ -198,18 +194,18 @@ async function loadUserCategories() {
             parentMap.get(parentId).push(cat);
         });
         
-        console.log('parentMap:', Array.from(parentMap.entries()));
-        
-        // Сохраняем карточку "Всё" и очищаем контейнер
         const allCard = container.querySelector('[data-category="all"]');
         container.innerHTML = '';
         if (allCard) container.appendChild(allCard);
         
-        // Добавляем корневые и их дочерние категории
         const rootCategories = parentMap.get('root') || [];
-        console.log('Корневые категории:', rootCategories);
         
         rootCategories.forEach(rootCat => {
+            const children = parentMap.get(String(rootCat.id)) || [];
+            
+            const group = document.createElement('div');
+            group.className = 'category-group';
+            
             // Родительская категория
             const rootItem = document.createElement('div');
             rootItem.className = 'category-item';
@@ -222,40 +218,32 @@ async function loadUserCategories() {
                 window.router(`/products?category=${rootCat.slug}`);
                 history.pushState({}, '', `/products?category=${rootCat.slug}`);
             };
-            container.appendChild(rootItem);
+            group.appendChild(rootItem);
             
             // Дочерние категории
-            const children = parentMap.get(String(rootCat.id)) || [];
-            console.log(`Дочерние для ${rootCat.name} (id=${rootCat.id}):`, children);
+            if (children.length > 0) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'category-children';
+                
+                children.forEach(child => {
+                    const childItem = document.createElement('div');
+                    childItem.className = 'category-item category-child';
+                    childItem.setAttribute('data-category', child.slug);
+                    childItem.innerHTML = `
+                        <h3>${child.name}</h3>
+                        <p>Подкатегория</p>
+                    `;
+                    childItem.onclick = () => {
+                        window.router(`/products?category=${child.slug}`);
+                        history.pushState({}, '', `/products?category=${child.slug}`);
+                    };
+                    childrenContainer.appendChild(childItem);
+                });
+                
+                group.appendChild(childrenContainer);
+            }
             
-            children.forEach(child => {
-                const childItem = document.createElement('div');
-                childItem.className = 'category-item category-child';
-                childItem.setAttribute('data-category', child.slug);
-                childItem.innerHTML = `
-                    <h3>↳ ${child.name}</h3>
-                    <p>Подкатегория</p>
-                `;
-                childItem.onclick = () => {
-                    window.router(`/products?category=${child.slug}`);
-                    history.pushState({}, '', `/products?category=${child.slug}`);
-                };
-                container.appendChild(childItem);
-            });
-        });
-        
-        // Перепривязываем обработчики ко всем карточкам
-        document.querySelectorAll('.category-item').forEach(item => {
-            item.onclick = () => {
-                const category = item.getAttribute('data-category');
-                if (category === 'all') {
-                    window.router('/products');
-                    history.pushState({}, '', '/products');
-                } else {
-                    window.router(`/products?category=${category}`);
-                    history.pushState({}, '', `/products?category=${category}`);
-                }
-            };
+            container.appendChild(group);
         });
     } catch (err) {
         console.error('Ошибка загрузки категорий:', err);
