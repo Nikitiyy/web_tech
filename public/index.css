@@ -74,9 +74,15 @@ select.input option{background:var(--bg-dark);color:var(--white-100);padding:.5e
 .features-list li{color:var(--text-primary);font-size:1.1em;padding:1em;background:rgba(233,69,96,.1);border-radius:var(--r-sm);border-left:4px solid var(--accent)}
 
 /* ===== КАТЕГОРИИ ===== */
-.categories-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1em;margin-top:1em}
-.category-item{padding:1.2em;border-radius:var(--r-md);cursor:pointer;transition:var(--transition)}
-.category-item:hover{transform:translateY(-3px)}
+.categories-section{display:flex;flex-direction:column;gap:.6em;margin-top:1em;max-width:400px;margin-left:auto;margin-right:auto}
+.category-item{padding:1.2em 1.5em;border-radius:var(--r-md);cursor:pointer;transition:var(--transition);text-align:left}
+.category-item:hover{transform:translateY(-2px);background:rgba(255,255,255,.1);border-color:var(--accent)}
+.category-item h3{font-size:1.2em;margin-bottom:.2em}
+.category-item p{font-size:.9em;color:var(--text-secondary)}
+.category-child{margin-left:2em;padding:.8em 1.2em;opacity:.9;background:var(--white-8);transform:none;max-width:calc(100% - 2em)}
+.category-child h3{font-size:1em;color:var(--text-secondary)}
+.category-child p{font-size:.85em}
+.category-child:hover{transform:translateY(-2px);opacity:1}
 
 /* ===== ТОВАРЫ ===== */
 .products-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5em;margin-top:1em}
