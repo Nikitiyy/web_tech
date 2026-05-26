@@ -197,7 +197,10 @@ async function loadUserCategories() {
             return;
         }
         
-        result.categories.forEach(cat => {
+        // Показываем только корневые категории (без parent_id)
+        const rootCategories = result.categories.filter(c => !c.parent_id);
+        
+        rootCategories.forEach(cat => {
             const item = document.createElement('div');
             item.className = 'category-item';
             item.setAttribute('data-category', cat.slug);

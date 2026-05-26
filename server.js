@@ -279,7 +279,7 @@ app.post('/api/categories', async (req, res) => {
         return res.status(403).json({ success: false, message: 'Доступ запрещён' });
     }
 
-    const { name, slug, display_order } = req.body;
+    const { name, slug, display_order, parent_id } = req.body;
 
     try {
         if (!name || !slug) {
@@ -287,8 +287,8 @@ app.post('/api/categories', async (req, res) => {
         }
 
         const [result] = await pool.query(
-            'INSERT INTO categories (name, slug, display_order) VALUES (?, ?, ?)',
-            [name.trim(), slug.trim(), display_order || 0]
+            'INSERT INTO categories (name, slug, display_order, parent_id) VALUES (?, ?, ?, ?)',
+            [name.trim(), slug.trim(), display_order || 0, parent_id || null]
         );
 
         res.json({ success: true, categoryId: result.insertId, message: 'Категория добавлена' });
@@ -306,6 +306,12 @@ app.delete('/api/categories/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
+        // Проверяем, есть ли дочерние категории
+        const [children] = await pool.query('SELECT COUNT(*) as count FROM categories WHERE parent_id = ?', [id]);
+        if (children[0].count > 0) {
+            return res.json({ success: false, message: 'Нельзя удалить категорию с подкатегориями' });
+        }
+
         // Проверяем, есть ли товары в этой категории
         const [products] = await pool.query('SELECT COUNT(*) as count FROM products WHERE category_id = ?', [id]);
         if (products[0].count > 0) {

@@ -484,12 +484,13 @@ export function admin_categories() {
                                 <th>ID</th>
                                 <th>Название</th>
                                 <th>Slug</th>
+                                <th>Родитель</th>
                                 <th>Порядок</th>
                                 <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody id="categories-table-body">
-                            <tr><td colspan="5">Загрузка...</td></tr>
+                            <tr><td colspan="6">Загрузка...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -524,15 +525,18 @@ async function loadCategoriesTable() {
     const tbody = document.getElementById('categories-table-body');
     
     if (categories.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Категорий пока нет</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">Категорий пока нет</td></tr>';
         return;
     }
+    
+    const parentMap = new Map(categories.map(c => [c.id, c.name]));
     
     tbody.innerHTML = categories.map(cat => `
         <tr>
             <td>${cat.id}</td>
             <td class="product-name">${cat.name}</td>
             <td>${cat.slug}</td>
+            <td>${cat.parent_id ? (parentMap.get(cat.parent_id) || 'ID: ' + cat.parent_id) : '—'}</td>
             <td>${cat.display_order}</td>
             <td class="actions-cell">
                 <button class="button-delete" onclick="deleteCategory(${cat.id})">🗑️ Удалить</button>
@@ -596,6 +600,13 @@ export function admin_add_category() {
                     </div>
                     
                     <div class="form-group">
+                        <label for="category-parent">Родительская категория</label>
+                        <select id="category-parent" class="input">
+                            <option value="">— Корневая категория —</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="category-order">Порядок отображения</label>
                         <input type="number" id="category-order" class="input" value="0" min="0">
                     </div>
@@ -617,6 +628,7 @@ export function admin_add_category() {
     main.innerHTML = main_body;
     
     loadAdminName();
+    loadParentCategories();
     
     document.getElementById('button_back').onclick = () => history.back();
     document.getElementById('button_logout').onclick = async () => {
@@ -642,7 +654,8 @@ export function admin_add_category() {
         const data = {
             name: document.getElementById('category-name').value.trim(),
             slug: document.getElementById('category-slug').value.trim(),
-            display_order: parseInt(document.getElementById('category-order').value) || 0
+            display_order: parseInt(document.getElementById('category-order').value) || 0,
+            parent_id: document.getElementById('category-parent').value || null
         };
         
         try {
@@ -665,5 +678,24 @@ export function admin_add_category() {
             Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
         }
     };
+}
+
+async function loadParentCategories() {
+    try {
+        const res = await fetch('/api/categories', { credentials: 'same-origin' });
+        const result = await res.json();
+
+        if (result.success && result.categories) {
+            const select = document.getElementById('category-parent');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">— Корневая категория —</option>' +
+                result.categories.map(cat => 
+                    `<option value="${cat.id}">${cat.name}</option>`
+                ).join('');
+        }
+    } catch (err) {
+        console.error('Ошибка загрузки категорий:', err);
+    }
 }
 
