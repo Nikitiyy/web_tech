@@ -84,7 +84,7 @@ export function main_menu() {
     };
 }
 
-export function categories() {
+export async function categories() {
     const main = document.querySelector('body');
     main.innerHTML = '';
     
@@ -123,7 +123,7 @@ export function categories() {
                 <h2>Категории товаров</h2>
             </div>
             
-            <section class="categories-section">
+            <section class="categories-section" id="categories-container">
                 <div class="category-item" data-category="all">
                     <h3>Всё</h3>
                     <p>Все товары магазина</p>
@@ -139,11 +139,13 @@ export function categories() {
     
     main.innerHTML = main_body;
 
+    await loadUserCategories();
+
+    // Обработчики кликов для всех категорий
     const allCategories = document.querySelectorAll('.category-item');
     allCategories.forEach(item => {
         item.onclick = () => {
             const category = item.getAttribute('data-category');
-        
             if (category === 'all') {
                 window.router('/products');
                 history.pushState({}, '', '/products');
@@ -153,7 +155,6 @@ export function categories() {
             }
         };
     });
-
 
     const searchInput = document.getElementById('search-input');
     searchInput.oninput = () => {
@@ -183,6 +184,36 @@ export function categories() {
     button_back.onclick = () => {
         history.back();
     };
+}
+
+async function loadUserCategories() {
+    const container = document.getElementById('categories-container');
+    
+    try {
+        const res = await fetch('/api/categories', { credentials: 'same-origin' });
+        const result = await res.json();
+        
+        if (!result.success || !result.categories) {
+            return;
+        }
+        
+        result.categories.forEach(cat => {
+            const item = document.createElement('div');
+            item.className = 'category-item';
+            item.setAttribute('data-category', cat.slug);
+            item.innerHTML = `
+                <h3>${cat.name}</h3>
+                <p>Товары категории</p>
+            `;
+            item.onclick = () => {
+                window.router(`/products?category=${cat.slug}`);
+                history.pushState({}, '', `/products?category=${cat.slug}`);
+            };
+            container.appendChild(item);
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки категорий:', err);
+    }
 }
 
 export function profile() {
