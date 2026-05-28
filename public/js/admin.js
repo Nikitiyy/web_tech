@@ -122,9 +122,10 @@ export function admin_products() {
                     <table class="products-table">
                         <thead>
                             <tr>
-                                <th>Фото</th>
+                                <th>Главное фото</th>
                                 <th>Название</th>
                                 <th>Категория</th>
+                                <th>Фото</th>
                                 <th>Цена (BYN)</th>
                                 <th>Наличие</th>
                                 <th>Действия</th>
@@ -179,7 +180,7 @@ async function loadAdminProducts() {
         const result = await res.json();
         
         if (!result.success || !result.products || result.products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">Товаров пока нет</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7">Товаров пока нет</td></tr>';
             return;
         }
         
@@ -315,14 +316,16 @@ export function admin_add_product() {
                     </div>
                     
                     <div class="form-group">
-                        <label for="product-image">Изображение товара</label>
+                        <label for="product-images">Изображения товара (до 5 шт.)</label>
                         <input 
                             type="file" 
-                            id="product-image" 
+                            id="product-images" 
                             class="input" 
                             accept="image/*"
+                            multiple
                             required
                         >
+                        <p style="color:var(--text-muted);font-size:.85em;margin-top:.3em">Первое фото будет главным</p>
                     </div>
                     
                     <div class="form-group checkbox-group">
@@ -383,9 +386,9 @@ export function admin_add_product() {
         formData.append('category_id', document.getElementById('product-category').value);
         formData.append('is_available', document.getElementById('product-available').checked);
         
-        const imageFile = document.getElementById('product-image').files[0];
-        if (imageFile) {
-            formData.append('image', imageFile);
+        const imageFiles = document.getElementById('product-images').files;
+        for (let i = 0; i < imageFiles.length; i++) {
+            formData.append('images', imageFiles[i]);
         }
         
         try {

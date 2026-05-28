@@ -362,11 +362,11 @@ app.delete('/api/products/:id', async (req, res) => {
     }
 });
 
-app.post('/api/products', upload.single('image'), async (req, res) => {
+app.post('/api/products', upload.array('images', 5), async (req, res) => {
     if (!req.session.userId || req.session.role !== 'admin') {
-        // Удаляем загруженный файл если доступ запрещён
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
+        // Удаляем загруженные файлы если доступ запрещён
+        if (req.files) {
+            req.files.forEach(file => fs.unlinkSync(file.path));
         }
         return res.status(403).json({ 
             success: false,
@@ -375,39 +375,70 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
     }
 
     const { name, description, price, category_id, is_available } = req.body;
-    const image_url = req.file ? '/uploads/' + req.file.filename : '';
+    const files = req.files || [];
 
     try {
         // Валидация
         if (!name || name.trim().length === 0) {
-            if (req.file) fs.unlinkSync(req.file.path);
+            files.forEach(file => fs.unlinkSync(file.path));
             return res.json({ success: false, message: 'Название товара обязательно' });
         }
         if (!price || parseFloat(price) <= 0) {
-            if (req.file) fs.unlinkSync(req.file.path);
+            files.forEach(file => fs.unlinkSync(file.path));
             return res.json({ success: false, message: 'Цена должна быть больше 0' });
         }
         if (!category_id) {
-            if (req.file) fs.unlinkSync(req.file.path);
+            files.forEach(file => fs.unlinkSync(file.path));
             return res.json({ success: false, message: 'Выберите категорию' });
         }
-        if (!req.file) {
-            return res.json({ success: false, message: 'Загрузите изображение товара' });
+        if (files.length === 0) {
+            return res.json({ success: false, message: 'Загрузите хотя бы одно изображение товара' });
         }
 
-        const [result] = await pool.query(
-            `INSERT INTO products (name, description, price, category_id, image_url, is_available) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [name.trim(), description.trim(), parseFloat(price), parseInt(category_id), image_url, is_available === 'true' ? 1 : 0]
-        );
+        // Транзакция: вставка товара и фото
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-        res.json({
-            success: true,
-            productId: result.insertId,
-            message: 'Товар успешно добавлен' 
-        });
+        try {
+            // 1. Создаём товар (image_url будет первым фото)
+            const mainImageUrl = files[0] ? '/uploads/' + files[0].filename : '';
+            
+            const [result] = await connection.query(
+                `INSERT INTO products (name, description, price, category_id, image_url, is_available) 
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [name.trim(), description.trim(), parseFloat(price), parseInt(category_id), mainImageUrl, is_available === 'true' ? 1 : 0]
+            );
+
+            const productId = result.insertId;
+
+            // 2. Добавляем все фото в product_images
+            for (let i = 0; i < files.length; i++) {
+                await connection.query(
+                    `INSERT INTO product_images (product_id, image_url, is_main, display_order) 
+                     VALUES (?, ?, ?, ?)`,
+                    [productId, '/uploads/' + files[i].filename, i === 0 ? 1 : 0, i]
+                );
+            }
+
+            await connection.commit();
+            connection.release();
+
+            res.json({
+                success: true,
+                productId: productId,
+                imagesCount: files.length,
+                message: 'Товар успешно добавлен с ' + files.length + ' изображени' + (files.length % 10 === 1 && files.length !== 11 ? 'ем' : 'ями')
+            });
+        } catch (err) {
+            await connection.rollback();
+            connection.release();
+            // Удаляем все файлы при ошибке
+            files.forEach(file => {
+                try { fs.unlinkSync(file.path); } catch (e) {}
+            });
+            throw err;
+        }
     } catch (err) {
-        if (req.file) fs.unlinkSync(req.file.path);
         console.error('Ошибка добавления товара:', err);
         res.status(500).json({ success: false, message: 'Ошибка сервера' });
     }
