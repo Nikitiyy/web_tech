@@ -419,7 +419,7 @@ app.get('/api/products', async (req, res) => {
     try {
         let query;
         let params;
-        console.log('one');
+        
         if(category === 'all' || !category) {
             query = 'SELECT * FROM products WHERE is_available = TRUE';
             params = [];

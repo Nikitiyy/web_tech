@@ -7,7 +7,6 @@ export function router(path) {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
-    console.log(path);
     switch(path) {
         case '/':
         case '/login': {
@@ -65,7 +64,7 @@ export function router(path) {
     }
 
     if (path.startsWith('/products')) {
-        products();
+        products(path);
         return;
     }
 }

@@ -8,7 +8,7 @@ import './products.js';
 import './admin.js';
 
 window.addEventListener('popstate', () => {
-    router(location.pathname);  
+    router(location.href.substring(location.origin.length));  
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -24,5 +24,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    router(location.pathname);
+    router(location.href.substring(location.origin.length));
 });

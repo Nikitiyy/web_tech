@@ -1,9 +1,19 @@
 // router доступен через window.router
 
-export function products() {
+export function products(path) {
     const main = document.querySelector('body');
-    const urlParams = new URLSearchParams(window.location.search);
-    const category = urlParams.get('category') || 'all';
+    
+    // Парсим category из переданного path, если не передан — из window.location
+    let category;
+    if (!path) {
+        const urlParams = new URLSearchParams(window.location.search);
+        category = urlParams.get('category') || 'all';
+    } else {
+        const pathParts = path.split('?');
+        const queryString = pathParts[1] || '';
+        const urlParams = new URLSearchParams(queryString);
+        category = urlParams.get('category') || 'all';
+    }
     
     const main_body = `
     <div class="page-container">
@@ -81,6 +91,8 @@ async function loadProducts(category) {
             credentials: 'same-origin'
         });
         const result = await res.json();
+        
+        console.log('Ответ от сервера:', result);
         
         if (result.success && result.products.length > 0) {
             container.innerHTML = result.products.map(product => `
