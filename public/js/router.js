@@ -1,13 +1,16 @@
 import { login, recovery, reset_password, reg } from './auth.js';
 import { main_menu, categories, profile } from './menu.js';
-import { admin_menu, admin_products, admin_add_product, admin_categories, admin_add_category } from './admin.js';
+import { admin_menu, admin_products, admin_add_product, admin_categories, admin_add_category, admin_edit_products } from './admin.js';
 import { products } from './products.js';
 
 export function router(path) {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
-    switch(path) {
+    // Извлекаем pathname без query string
+    const pathname = path.split('?')[0];
+
+    switch(pathname) {
         case '/':
         case '/login': {
             login();
@@ -57,14 +60,22 @@ export function router(path) {
             admin_add_category();
             break;
         }
-        case '/profile': {
-            profile();
+        case '/admin-edit-products': {
+            admin_edit_products();
             break;
         }
-    }
-
-    if (path.startsWith('/products')) {
-        products(path);
-        return;
+        case '/products':
+        case '/profile': {
+            if (pathname === '/products') {
+                products(path);
+            } else {
+                profile();
+            }
+            break;
+        }
+        case '/admin-edit-products': {
+            admin_edit_products(path);
+            break;
+        }
     }
 }

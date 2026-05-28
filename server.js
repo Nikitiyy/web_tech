@@ -362,6 +362,102 @@ app.delete('/api/products/:id', async (req, res) => {
     }
 });
 
+app.get('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Получаем товар
+        const [products] = await pool.query('SELECT * FROM products WHERE id = ?', [id]);
+        
+        if (products.length === 0) {
+            return res.status(404).json({ success: false, message: 'Товар не найден' });
+        }
+
+        // Получаем все фото товара
+        const [images] = await pool.query(
+            'SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order',
+            [id]
+        );
+
+        res.json({
+            success: true,
+            product: products[0],
+            images: images
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки товара:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    const { id } = req.params;
+    const { name, description, price, category_id, is_available, existing_images } = req.body;
+    const files = req.files || [];
+    const existingImages = existing_images ? JSON.parse(existing_images) : [];
+
+    try {
+        // Проверяем существование товара
+        const [products] = await pool.query('SELECT * FROM products WHERE id = ?', [id]);
+        if (products.length === 0) {
+            return res.status(404).json({ success: false, message: 'Товар не найден' });
+        }
+
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // 1. Обновляем основные данные товара
+            const mainImageUrl = files.length > 0 ? '/uploads/' + files[0].filename : products[0].image_url;
+            
+            await connection.query(
+                `UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, image_url = ?, is_available = ? WHERE id = ?`,
+                [name.trim(), description.trim(), parseFloat(price), parseInt(category_id), mainImageUrl, is_available === 'true' ? 1 : 0, id]
+            );
+
+            // 2. Удаляем только те фото, которые пользователь пометил на удаление
+            const keepImageIds = existingImages.filter(img => img.keep).map(img => img.id);
+            if (keepImageIds.length > 0) {
+                await connection.query('DELETE FROM product_images WHERE product_id = ? AND id NOT IN (?)', [id, keepImageIds]);
+            } else {
+                await connection.query('DELETE FROM product_images WHERE product_id = ?', [id]);
+            }
+
+            // 3. Добавляем новые фото
+            for (let i = 0; i < files.length; i++) {
+                // Получаем текущее max display_order
+                const [maxOrder] = await connection.query(
+                    'SELECT MAX(display_order) as max_order FROM product_images WHERE product_id = ?',
+                    [id]
+                );
+                const newOrder = (maxOrder[0].max_order || 0) + 1;
+                
+                await connection.query(
+                    `INSERT INTO product_images (product_id, image_url, is_main, display_order) 
+                     VALUES (?, ?, ?, ?)`,
+                    [id, '/uploads/' + files[i].filename, i === 0 ? 1 : 0, newOrder]
+                );
+            }
+
+            await connection.commit();
+            connection.release();
+
+            res.json({ success: true, message: 'Товар обновлён' });
+        } catch (err) {
+            await connection.rollback();
+            connection.release();
+            throw err;
+        }
+    } catch (err) {
+        console.error('Ошибка обновления товара:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     if (!req.session.userId || req.session.role !== 'admin') {
         // Удаляем загруженные файлы если доступ запрещён
