@@ -1,4 +1,4 @@
-import { loadAdminName } from "./loadAdminName";
+import { loadAdminName } from "./loadAdminName.js";
 
 export function admin_edit_products(path) {
     const main = document.querySelector('body');

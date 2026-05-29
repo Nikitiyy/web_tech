@@ -1,4 +1,4 @@
-import { loadAdminName } from './admin_name.js';
+import { loadAdminName } from './loadAdminName.js';
 
 async function loadCategories() {
     try {

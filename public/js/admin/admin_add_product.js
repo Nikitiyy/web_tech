@@ -1,5 +1,5 @@
-import { loadAdminName } from "./loadAdminName";
-import {loadCategories} from "./loadCategories";
+import { loadAdminName } from "./loadAdminName.js";
+import {loadCategories} from "./loadCategories.js";
 
 export function admin_add_product() {
     const main = document.querySelector('body');

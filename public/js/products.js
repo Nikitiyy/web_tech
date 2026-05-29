@@ -1,4 +1,4 @@
-import { loadProducts } from "./load_products";
+import { loadProducts } from "./load_products.js";
 
 export async function products(path) {
     const main = document.querySelector('body');

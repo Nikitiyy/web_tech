@@ -1,4 +1,4 @@
-import { loadAdminName } from "./loadAdminName";
+import { loadAdminName } from "./loadAdminName.js";
 
 export function admin_admins() {
     const main = document.querySelector('body');

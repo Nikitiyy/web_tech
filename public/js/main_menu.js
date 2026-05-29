@@ -48,7 +48,6 @@ export function main_menu() {
                 <ul class="features-list">
                     <li>Просматривать товары</li>
                     <li>Бронировать выбранные товары</li>
-                    <li>Получать помощь от наших консультантов</li>
                 </ul>
             </section>
         </main>

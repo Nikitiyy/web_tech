@@ -3,9 +3,23 @@ import { router } from './router.js';
 window.router = router;
 
 import './auth.js';
-import './menu.js';
+import './cart.js';
+import './categories.js';
+import './main_menu.js';
+import './products_details.js';
 import './products.js';
-import './admin.js';
+import './profile.js';
+import './recovery.js';
+import './admin/admin_add_admin.js';
+import './admin/admin_add_category.js';
+import './admin/admin_add_product.js';
+import './admin/admin_admins.js';
+import './admin/admin_categories.js';
+import './admin/admin_edit_product.js';
+import './admin/admin_menu.js';
+import './admin/admin_products.js';
+
+
 
 window.addEventListener('popstate', () => {
     router(location.href.substring(location.origin.length));  
