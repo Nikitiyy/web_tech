@@ -12,8 +12,16 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         maxAge: 3600000,
-        httpOnly: true
+        httpOnly: true,
+        secure: true
     }
+}));
+
+const cors = require('cors');
+
+app.use(cors({
+    origin: 'https://nikitiyy.github.io/web_tech_hosting/',
+    credentials: true
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
