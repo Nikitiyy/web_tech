@@ -36,11 +36,6 @@ export function admin_menu() {
                     <h3>👥 Администраторы</h3>
                     <p>Список администраторов</p>
                 </div>
-                
-                <div class="admin-card" id="admin-add-admin">
-                    <h3>➕ Добавить админа</h3>
-                    <p>Создание нового администратора</p>
-                </div>
             </section>
         </main>
         
@@ -77,12 +72,6 @@ export function admin_menu() {
     adminAdmins.onclick = () => {
         window.router('/admin-admins');
         history.pushState({}, '', '/admin-admins');
-    };
-    
-    const adminAddAdmin = document.getElementById('admin-add-admin');
-    adminAddAdmin.onclick = () => {
-        window.router('/admin-add-admin');
-        history.pushState({}, '', '/admin-add-admin');
     };
 }
     
@@ -927,5 +916,224 @@ async function saveProduct(productId) {
     } catch (err) {
         Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
     }
+}
+
+export function admin_admins() {
+    const main = document.querySelector('body');
+    main.innerHTML = '';    
+
+    const main_body = `
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Админ Панель</h1>
+            <nav class="header-right">
+                <button type="button" id="button_back" class="button-header">← Назад</button>
+                <span class="admin-name" id="admin-name">Загрузка...</span>
+                <button type="button" id="button_logout" class="button-header">Выйти</button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Управление администраторами</h2>
+                <p>Создание и управление администраторами</p>
+            </div>
+            
+            <section class="admin-products-section">
+                <div class="admin-products-header">
+                    <button type="button" id="button_add_admin" class="button-add-product">➕ Добавить админа</button>
+                </div>
+                
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Логин</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admins-table-body">
+                            <tr><td colspan="3">Загрузка...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин</p>
+        </footer>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+    
+    loadAdminName();
+    loadAdminsList();
+    
+    document.getElementById('button_back').onclick = () => history.back();
+    document.getElementById('button_logout').onclick = async () => {
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+        window.router('/');
+        history.pushState({}, '', '/');
+    };
+    document.getElementById('button_add_admin').onclick = () => {
+        window.router('/admin-add-admin');
+        history.pushState({}, '', '/admin-add-admin');
+    };
+}
+
+async function loadAdminsList() {
+    const tbody = document.getElementById('admins-table-body');
+    if (!tbody) return;
+    
+    try {
+        const res = await fetch('/api/admins', { credentials: 'same-origin' });
+        const result = await res.json();
+        
+        if (!result.success || !result.admins || result.admins.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3">Администраторов пока нет</td></tr>';
+            return;
+        }
+        
+        const currentAdminId = result.currentUserId ? parseInt(result.currentUserId) : null;
+        
+        tbody.innerHTML = result.admins.map(admin => {
+            const isCurrentUser = currentAdminId !== null && parseInt(admin.id) === currentAdminId;
+            
+            return `
+                <tr>
+                    <td>${admin.id}</td>
+                    <td class="product-name">${admin.login}</td>
+                    <td>
+                        ${isCurrentUser ? '<span style="color:var(--text-muted)">—</span>' : `<button class="button-delete" onclick="deleteAdmin(${admin.id})">🗑️ Удалить</button>`}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="3">Ошибка загрузки</td></tr>';
+    }
+}
+
+window.deleteAdmin = async function(id) {
+    if (!confirm('Удалить администратора?')) return;
+    try {
+        const res = await fetch(`/api/admins/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+        const result = await res.json();
+        if (result.success) {
+            Toastify({ text: 'Администратор удалён', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+            loadAdminsList();
+        } else {
+            Toastify({ text: result.message || 'Ошибка', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+        }
+    } catch (err) {
+        Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+    }
+};
+
+export function admin_add_admin() {
+    const main = document.querySelector('body');
+    main.innerHTML = '';    
+
+    const main_body = `
+    <div class="page-container">
+        <header class="header">
+            <h1 class="logo">Админ Панель</h1>
+            <nav class="header-right">
+                <button type="button" id="button_back" class="button-header">← Назад</button>
+                <span class="admin-name" id="admin-name">Загрузка...</span>
+                <button type="button" id="button_logout" class="button-header">Выйти</button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Добавить администратора</h2>
+                <p>Создание нового администратора</p>
+            </div>
+            
+            <section class="add-product-section">
+                <form class="add-product-form" id="add-admin-form">
+                    <div class="form-group">
+                        <label for="admin-login">Логин</label>
+                        <input type="text" id="admin-login" class="input" placeholder="Придумайте логин (минимум 3 символа)" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="admin-password">Пароль</label>
+                        <input type="password" id="admin-password" class="input" placeholder="Придумайте пароль (минимум 6 символов)" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="admin-password-confirm">Подтвердите пароль</label>
+                        <input type="password" id="admin-password-confirm" class="input" placeholder="Повторите пароль" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="button-submit">➕ Добавить админа</button>
+                        <button type="button" id="button_cancel" class="button-cancel">Отмена</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2026 Музыкальный Магазин</p>
+        </footer>
+    </div>
+    `;
+    
+    main.innerHTML = main_body;
+    
+    loadAdminName();
+    
+    document.getElementById('button_back').onclick = () => history.back();
+    document.getElementById('button_logout').onclick = async () => {
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+        window.router('/');
+        history.pushState({}, '', '/');
+    };
+    document.getElementById('button_cancel').onclick = () => history.back();
+    
+    document.getElementById('add-admin-form').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const login = document.getElementById('admin-login').value.trim();
+        const password = document.getElementById('admin-password').value;
+        const passwordConfirm = document.getElementById('admin-password-confirm').value;
+        
+        if (password !== passwordConfirm) {
+            Toastify({ text: 'Пароли не совпадают', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+            return;
+        }
+        
+        if (password.length < 6) {
+            Toastify({ text: 'Пароль минимум 6 символов', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/admins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ login, password })
+            });
+            
+            const result = await res.json();
+            
+            if (result.success) {
+                Toastify({ text: 'Администратор добавлен', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+                window.router('/admin-admins');
+                history.pushState({}, '', '/admin-admins');
+            } else {
+                Toastify({ text: result.message || 'Ошибка', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+            }
+        } catch (err) {
+            Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+        }
+    };
 }
 

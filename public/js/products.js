@@ -3,111 +3,108 @@
 export function products(path) {
     const main = document.querySelector('body');
     
-    // Парсим category из переданного path, если не передан — из window.location
-    let category;
-    if (!path) {
-        const urlParams = new URLSearchParams(window.location.search);
-        category = urlParams.get('category') || 'all';
-    } else {
-        const pathParts = path.split('?');
-        const queryString = pathParts[1] || '';
+    // Парсим category и search из переданного path
+    let category = 'all';
+    let searchQuery = null;
+    
+    if (path && path.includes('?')) {
+        const queryString = path.split('?')[1] || '';
         const urlParams = new URLSearchParams(queryString);
         category = urlParams.get('category') || 'all';
+        searchQuery = urlParams.get('search');
+    } else if (!path) {
+        const urlParams = new URLSearchParams(window.location.search);
+        category = urlParams.get('category') || 'all';
+        searchQuery = urlParams.get('search');
     }
     
     const main_body = `
     <div class="page-container">
         <header class="header">
             <h1 class="logo">Музыкальный Магазин</h1>
-            <div class="header-center">
-                <button type="button" id="button_catalog" class="button-header">Каталог</button>
-                <div class="header-search">
-                    <input type="text" id="search-input" class="input-search" placeholder="Поиск товаров...">
+                <div class="header-center">
+                    <button type="button" id="button_catalog" class="button-header">Каталог</button>
+                    <div class="header-search">
+                        <input type="text" class="input-search" placeholder="Поиск товаров..." disabled style="opacity:0.5;cursor:not-allowed">
+                    </div>
                 </div>
-            </div>
-            <nav class="header-right">
-                <button type="button" id="button_back" class="button-header">← Назад</button>
-                <button type="button" id="button_profile" class="button-header">Профиль</button>
-                <button type="button" id="button_logout" class="button-header">Выйти</button>
-            </nav>
-        </header>
-        
-        <main class="main-content">
-            <div class="welcome-section">
-                <h2>Товары</h2>
-            </div>
+                        ${images.length > 1 ? `
+                        <div class="product-thumbnails">
+                            ${images.map((img, index) => `
+                                <img class="thumbnail ${img.is_main ? 'active' : ''}" 
+                                     src="${img.image_url}" 
+                                     data-src="${img.image_url}"
+                                     onclick="changeMainImage(this)">
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="product-details-info">
+                        <h1 id="product-name">${product.name}</h1>
+                        <p id="product-category" class="product-category">Категория: ${product.category_id}</p>
+                        <p id="product-description" class="product-description">${product.description || 'Описание отсутствует'}</p>
+                        <div class="product-details-price" id="product-price">${parseFloat(product.price).toFixed(2)} BYN</div>
+                        
+                        <button type="button" id="button_add_to_cart" class="button-add-to-cart button-large">
+                            🛒 Добавить в корзину
+                        </button>
+                    </div>
+                </div>
+            </main>
             
-            <section class="products-section" id="products-container">
-                <!-- Товары загрузятся сюда -->
-            </section>
-        </main>
+            <footer class="footer">
+                <p>&copy; 2026 Музыкальный Магазин</p>
+            </footer>
+        </div>
+        `;
         
-        <footer class="footer">
-            <p>&copy; 2026 Музыкальный Магазин</p>
-        </footer>
-    </div>
-    `;
-    
-    main.innerHTML = main_body;
-    
-    const button_catalog = document.getElementById('button_catalog');
-    button_catalog.onclick = () => {
-        window.window.router('/categories');
-        history.pushState({}, '', '/categories');
-    };
-
-    const button_profile = document.getElementById('button_profile');
-    button_profile.onclick = () => {
-        window.window.router('/profile');
-        history.pushState({}, '', '/profile');
-    };
-
-    const button_logout = document.getElementById('button_logout');
-    button_logout.onclick = async () => {        
-        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
-        window.window.router('/');
-        history.pushState({}, '', '/');
-    };
-    
-    const button_back = document.getElementById('button_back');
-    button_back.onclick = () => {
-        history.back();
-    };
-    
-    const searchInput = document.getElementById('search-input');
-    searchInput.oninput = () => {
-        const query = searchInput.value;
-    };
-    
-    loadProducts(category);
-}
-
-async function loadProducts(category) {
-    const container = document.getElementById('products-container');
-    container.innerHTML = '<p>Загрузка...</p>';
-    
-    try {
-        const res = await fetch(`/api/products?category=${category}`, {
-            credentials: 'same-origin'
-        });
-        const result = await res.json();
+        main.innerHTML = main_body;
         
-        console.log('Ответ от сервера:', result);
+        document.getElementById('button_add_to_cart').onclick = async () => {
+            try {
+                const addRes = await fetch('/api/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ product_id: productId, quantity: 1 })
+                });
+                const addResult = await addRes.json();
+                
+                if (addResult.success) {
+                    Toastify({ text: 'Товар добавлен в корзину', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+                } else {
+                    if (addRes.status === 401) {
+                        Toastify({ text: 'Войдите, чтобы добавить в корзину', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+                    } else {
+                        Toastify({ text: addResult.message || 'Ошибка', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+                    }
+                }
+            } catch (err) {
+                Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+            }
+        };
         
-        if (result.success && result.products.length > 0) {
-            container.innerHTML = result.products.map(product => `
-                <div class="product-card">
-                    <img src="${product.image_url}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p class="product-desc">${product.description}</p>
-                    <p class="product-price">${product.price} BYN</p>
-                    <button class="button-add-to-cart">В корзину</button>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = '<p>Товары не найдены</p>';
-        }
-    } catch (err) {
-        container.innerHTML = '<p>Ошибка загрузки товаров</p>';
-    }
-}
+        document.getElementById('button_catalog').onclick = () => {
+            window.router('/categories');
+            history.pushState({}, '', '/categories');
+        };
+        
+        document.getElementById('button_cart').onclick = () => {
+            window.router('/cart');
+            history.pushState({}, '', '/cart');
+        };
+        
+        document.getElementById('button_profile').onclick = () => {
+            window.router('/profile');
+            history.pushState({}, '', '/profile');
+        };
+        
+        document.getElementById('button_back').onclick = () => history.back();
+        
+        document.getElementById('button_logout').onclick = async () => {
+            await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+            window.router('/');
+            history.pushState({}, '', '/');
+        };
+    } 

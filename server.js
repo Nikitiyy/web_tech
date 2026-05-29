@@ -256,13 +256,82 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/check-auth', (req, res) => {
     if (req.session.userId) {
-        res.json({ success: true, isLoggedIn: true, role: req.session.role });
+        res.json({ success: true, isLoggedIn: true, userId: req.session.userId, role: req.session.role });
     } else {
         res.json({ success: true, isLoggedIn: false });
     }
 });
 
 
+
+app.get('/api/admins', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    try {
+        const [rows] = await pool.query('SELECT id, login FROM admins ORDER BY id');
+        res.json({ success: true, admins: rows, currentUserId: req.session.userId });
+    } catch (err) {
+        console.error('Ошибка загрузки админов:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/admins', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    const { login, password } = req.body;
+
+    try {
+        if (!login || login.trim().length < 3) {
+            return res.json({ success: false, message: 'Логин минимум 3 символа' });
+        }
+        if (!password || password.length < 6) {
+            return res.json({ success: false, message: 'Пароль минимум 6 символов' });
+        }
+
+        // Проверяем уникальность логина
+        const [existing] = await pool.query('SELECT id FROM admins WHERE login = ?', [login.trim()]);
+        if (existing.length > 0) {
+            return res.json({ success: false, message: 'Такой логин уже существует' });
+        }
+
+        const hash = await bcrypt.hash(password, 10);
+        const [result] = await pool.query(
+            'INSERT INTO admins (login, password) VALUES (?, ?)',
+            [login.trim(), hash]
+        );
+
+        res.json({ success: true, adminId: result.insertId, message: 'Администратор добавлен' });
+    } catch (err) {
+        console.error('Ошибка добавления админа:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.delete('/api/admins/:id', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Доступ запрещён' });
+    }
+
+    const { id } = req.params;
+
+    try {
+        // Проверяем, не удаляет ли админ сам себя
+        if (parseInt(id) === req.session.userId) {
+            return res.json({ success: false, message: 'Нельзя удалить самого себя' });
+        }
+
+        await pool.query('DELETE FROM admins WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Администратор удалён' });
+    } catch (err) {
+        console.error('Ошибка удаления админа:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
 
 app.get('/api/categories', async (req, res) => {
     try {
@@ -547,22 +616,163 @@ app.get('/api/products', async (req, res) => {
         let query;
         let params;
         
-        if(category === 'all' || !category) {
+        if (category === 'all' || !category) {
             query = 'SELECT * FROM products WHERE is_available = TRUE';
             params = [];
         } else {
-            query = `
-                SELECT p.* FROM products p
-                JOIN categories c ON p.category_id = c.id
-                WHERE c.slug = ? AND p.is_available = TRUE
-            `;
-            params = [category];
+            // Получаем категорию по slug
+            const [catRows] = await pool.query('SELECT id FROM categories WHERE slug = ?', [category]);
+            
+            if (catRows.length === 0) {
+                return res.json({ success: true, products: [] });
+            }
+            
+            const categoryId = catRows[0].id;
+            
+            // Получаем все дочерние категории (простой запрос без рекурсии)
+            const [childRows] = await pool.query(
+                'SELECT id FROM categories WHERE parent_id = ?',
+                [categoryId]
+            );
+            
+            let categoryIds = [categoryId];
+            if (childRows.length > 0) {
+                categoryIds = [categoryId, ...childRows.map(r => r.id)];
+            }
+            
+            query = 'SELECT * FROM products WHERE is_available = TRUE AND category_id IN (?)';
+            params = [categoryIds];
         }
+        
         const [rows] = await pool.query(query, params);
 
         res.json({ success: true, products: rows });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.get('/api/search', async (req, res) => {
+    const query = req.query.q;
+
+    try {
+        if (!query || query.trim().length < 2) {
+            return res.json({ success: true, products: [], message: 'Введите минимум 2 символа' });
+        }
+
+        const searchQuery = `
+            SELECT * FROM products 
+            WHERE is_available = TRUE 
+            AND (
+                name LIKE ? 
+                OR description LIKE ?
+            )
+            LIMIT 50
+        `;
+        
+        const searchTerm = `%${query.trim()}%`;
+        const [rows] = await pool.query(searchQuery, [searchTerm, searchTerm]);
+
+        res.json({ success: true, products: rows, count: rows.length });
+    } catch (err) {
+        console.error('Ошибка поиска:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+// ===== КОРЗИНА =====
+app.get('/api/cart', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            `SELECT ci.id, ci.product_id, ci.quantity, p.name, p.price, p.image_url
+             FROM cart_items ci
+             JOIN products p ON ci.product_id = p.id
+             WHERE ci.user_id = ?`,
+            [req.session.userId]
+        );
+
+        const total = rows.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        res.json({ success: true, items: rows, total: total });
+    } catch (err) {
+        console.error('Ошибка загрузки корзины:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/cart/add', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    const { product_id, quantity = 1 } = req.body;
+
+    try {
+        const [existing] = await pool.query(
+            'SELECT id, quantity FROM cart_items WHERE user_id = ? AND product_id = ?',
+            [req.session.userId, product_id]
+        );
+
+        if (existing.length > 0) {
+            await pool.query(
+                'UPDATE cart_items SET quantity = quantity + ? WHERE id = ?',
+                [parseInt(quantity), existing[0].id]
+            );
+        } else {
+            await pool.query(
+                'INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)',
+                [req.session.userId, product_id, parseInt(quantity)]
+            );
+        }
+
+        res.json({ success: true, message: 'Товар добавлен в корзину' });
+    } catch (err) {
+        console.error('Ошибка добавления в корзину:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.delete('/api/cart/:id', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    const { id } = req.params;
+
+    try {
+        await pool.query('DELETE FROM cart_items WHERE id = ? AND user_id = ?', [id, req.session.userId]);
+        res.json({ success: true, message: 'Товар удалён из корзины' });
+    } catch (err) {
+        console.error('Ошибка удаления из корзины:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+app.put('/api/cart/update', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    const { cart_item_id, quantity } = req.body;
+
+    try {
+        if (quantity <= 0) {
+            await pool.query('DELETE FROM cart_items WHERE id = ? AND user_id = ?', [cart_item_id, req.session.userId]);
+            return res.json({ success: true, message: 'Товар удалён из корзины' });
+        }
+
+        await pool.query(
+            'UPDATE cart_items SET quantity = ? WHERE id = ? AND user_id = ?',
+            [parseInt(quantity), cart_item_id, req.session.userId]
+        );
+        res.json({ success: true, message: 'Количество обновлено' });
+    } catch (err) {
+        console.error('Ошибка обновления корзины:', err);
         res.status(500).json({ success: false, message: 'Ошибка сервера' });
     }
 });

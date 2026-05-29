@@ -1,14 +1,21 @@
 import { login, recovery, reset_password, reg } from './auth.js';
-import { main_menu, categories, profile } from './menu.js';
-import { admin_menu, admin_products, admin_add_product, admin_categories, admin_add_category, admin_edit_products } from './admin.js';
-import { products } from './products.js';
+import { main_menu, categories, profile, cart } from './menu.js';
+import { admin_menu, admin_products, admin_add_product, admin_categories, admin_add_category, admin_edit_products, admin_admins, admin_add_admin } from './admin.js';
+import { products, productDetails } from './products.js';
 
-export function router(path) {
+export async function router(path) {
     const main = document.querySelector('body');
     main.innerHTML = '';    
 
     // Извлекаем pathname без query string
     const pathname = path.split('?')[0];
+
+    // Проверяем маршрут /product/{id}
+    const productMatch = pathname.match(/^\/product\/(\d+)$/);
+    if (productMatch) {
+        await productDetails(parseInt(productMatch[1]));
+        return;
+    }
 
     switch(pathname) {
         case '/':
@@ -40,6 +47,10 @@ export function router(path) {
             categories();
             break;
         }
+        case '/cart': {
+            cart();
+            break;
+        }
         case '/main_admin': {
             admin_menu();
             break;
@@ -58,6 +69,18 @@ export function router(path) {
         }
         case '/admin-add-category': {
             admin_add_category();
+            break;
+        }
+        case '/admin-admins': {
+            admin_admins();
+            break;
+        }
+        case '/admin-add-admin': {
+            admin_add_admin();
+            break;
+        }
+        case '/admin-edit-products': {
+            admin_edit_products(path);
             break;
         }
         case '/admin-edit-products': {
