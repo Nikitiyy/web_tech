@@ -18,6 +18,7 @@ import './admin/admin_categories.js';
 import './admin/admin_edit_product.js';
 import './admin/admin_menu.js';
 import './admin/admin_products.js';
+import './admin/admin_reservations.js';
 
 
 

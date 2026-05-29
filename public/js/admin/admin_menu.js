@@ -37,6 +37,11 @@ export function admin_menu() {
                     <h3>👥 Администраторы</h3>
                     <p>Список администраторов</p>
                 </div>
+
+                <div class="admin-card" id="admin-reservations">
+                    <h3>📌 Бронирования</h3>
+                    <p>Управление забронированными товарами</p>
+                </div>
             </section>
         </main>
         
@@ -73,5 +78,11 @@ export function admin_menu() {
     adminAdmins.onclick = () => {
         window.router('/admin-admins');
         history.pushState({}, '', '/admin-admins');
+    };
+
+    const adminReservations = document.getElementById('admin-reservations');
+    adminReservations.onclick = () => {
+        window.router('/admin-reservations');
+        history.pushState({}, '', '/admin-reservations');
     };
 }

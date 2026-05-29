@@ -14,6 +14,7 @@ import { admin_categories } from './admin/admin_categories.js';
 import { admin_edit_products } from './admin/admin_edit_product.js';
 import { admin_menu } from './admin/admin_menu.js';
 import { admin_products } from './admin/admin_products.js';
+import { admin_reservations } from './admin/admin_reservations.js';
 
 
 
@@ -98,8 +99,8 @@ export async function router(path) {
             admin_edit_products(path);
             break;
         }
-        case '/admin-edit-products': {
-            admin_edit_products();
+        case '/admin-reservations': {
+            admin_reservations();
             break;
         }
         case '/products':

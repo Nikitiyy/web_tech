@@ -62,6 +62,7 @@ export function cart() {
                     </div>
                     <div class="cart-actions">
                         <button type="button" id="button_continue" class="button-cancel">Продолжить покупки</button>
+                        <button type="button" id="button_book" class="button-submit">📌 Забронировать</button>
                     </div>
                 </div>
             </section>
@@ -118,6 +119,25 @@ export function cart() {
     document.getElementById('button_continue').onclick = () => {
         window.router('/categories');
         history.pushState({}, '', '/categories');
+    };
+
+    document.getElementById('button_book').onclick = async () => {
+        try {
+            const res = await fetch('/api/reservations/book', {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                Toastify({ text: 'Товары забронированы!', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+                loadCart();
+            } else {
+                Toastify({ text: result.message || 'Ошибка', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+            }
+        } catch (err) {
+            Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+        }
     };
 
 }

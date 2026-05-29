@@ -98,4 +98,65 @@ router.put('/cart/update', requireAuth, async (req, res) => {
     }
 });
 
+router.post('/reservations/book', requireAuth, async (req, res) => {
+    if (req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+        const [cartItems] = await connection.query(
+            'SELECT product_id, quantity FROM cart_items WHERE user_id = ?',
+            [req.session.userId]
+        );
+
+        if (cartItems.length === 0) {
+            connection.release();
+            return res.json({ success: false, message: 'Корзина пуста' });
+        }
+
+        for (const item of cartItems) {
+            await connection.query(
+                'INSERT INTO reservations (user_id, product_id, quantity, status) VALUES (?, ?, ?, ?)',
+                [req.session.userId, item.product_id, item.quantity, 'active']
+            );
+        }
+
+        await connection.query('DELETE FROM cart_items WHERE user_id = ?', [req.session.userId]);
+
+        await connection.commit();
+        connection.release();
+
+        res.json({ success: true, message: 'Товары забронированы' });
+    } catch (err) {
+        await connection.rollback();
+        connection.release();
+        console.error('Ошибка бронирования:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+router.get('/reservations', requireAuth, async (req, res) => {
+    if (req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            `SELECT r.id, r.quantity, p.name, p.price, p.image_url
+             FROM reservations r
+             JOIN products p ON r.product_id = p.id
+             WHERE r.user_id = ? AND r.status = 'active'`,
+            [req.session.userId]
+        );
+
+        res.json({ success: true, items: rows });
+    } catch (err) {
+        console.error('Ошибка загрузки бронирований:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
 module.exports = router;

@@ -96,4 +96,36 @@ router.get('/profile', requireAuth, async (req, res) => {
     }
 });
 
+router.get('/admin/reservations', requireAdmin, async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT r.id, r.quantity, r.status,
+                    u.login AS user_login,
+                    p.id AS product_id, p.name AS product_name, p.price, p.image_url
+             FROM reservations r
+             JOIN users u ON r.user_id = u.id
+             JOIN products p ON r.product_id = p.id
+             WHERE r.status = 'active'
+             ORDER BY r.id DESC`
+        );
+
+        res.json({ success: true, reservations: rows });
+    } catch (err) {
+        console.error('Ошибка загрузки бронирований:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+router.delete('/admin/reservations/:id', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await pool.query('DELETE FROM reservations WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Бронирование удалено' });
+    } catch (err) {
+        console.error('Ошибка удаления бронирования:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
 module.exports = router;
