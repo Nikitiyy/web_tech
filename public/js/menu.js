@@ -62,9 +62,19 @@ export function main_menu() {
     main.innerHTML = main_body;
 
     const searchInput = document.getElementById('search-input');
-    searchInput.oninput = () => {
-        const query = searchInput.value;
-        console.log('Поиск:', query);
+    let searchTimeout = null;
+    searchInput.oninput = (e) => {
+        const query = e.target.value.trim();
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (query.length >= 2) {
+                window.router(`/products?search=${encodeURIComponent(query)}`);
+                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+            } else if (query.length === 0) {
+                window.router('/products');
+                history.pushState({}, '', '/products');
+            }
+        }, 300);
     };
 
     const button_catalog = document.getElementById('button_catalog');
@@ -78,7 +88,7 @@ export function main_menu() {
         window.router('/cart');
         history.pushState({}, '', '/cart');
     };
-    
+
     const button_profile = document.getElementById('button_profile');
     button_profile.onclick = () => {
         window.router('/profile');
@@ -91,25 +101,8 @@ export function main_menu() {
         window.router('/');
         history.pushState({}, '', '/');
     };
-
-    const button_back = document.getElementById('button_back');
-    button_back.onclick = () => {
-        history.back();
-    };
-
-    const searchInput = document.getElementById('search-input');
-    searchInput.oninput = (e) => {
-        const query = e.target.value.trim();
-        if (query.length >= 2) {
-            window.router(`/products?search=${encodeURIComponent(query)}`);
-            history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
-        } else if (query.length === 0) {
-            window.router('/products');
-            history.pushState({}, '', '/products');
-        }
-    };
 }
-
+    
 export async function categories() {
     const main = document.querySelector('body');
     main.innerHTML = '';
@@ -171,8 +164,19 @@ export async function categories() {
     await loadUserCategories();
 
     const searchInput = document.getElementById('search-input');
-    searchInput.oninput = () => {
-        const query = searchInput.value;
+    let searchTimeout = null;
+    searchInput.oninput = (e) => {
+        const query = e.target.value.trim();
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (query.length >= 2) {
+                window.router(`/products?search=${encodeURIComponent(query)}`);
+                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+            } else if (query.length === 0) {
+                window.router('/products');
+                history.pushState({}, '', '/products');
+            }
+        }, 300);
     };
     
     const button_catalog = document.getElementById('button_catalog');
@@ -370,24 +374,40 @@ export function profile() {
     // Загрузка данных профиля
     loadProfileData();
 
+    const searchInput = document.getElementById('search-input');
+    let searchTimeout = null;
+    searchInput.oninput = (e) => {
+        const query = e.target.value.trim();
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (query.length >= 2) {
+                window.router(`/products?search=${encodeURIComponent(query)}`);
+                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+            } else if (query.length === 0) {
+                window.router('/products');
+                history.pushState({}, '', '/products');
+            }
+        }, 300);
+    };
+
     const button_catalog = document.getElementById('button_catalog');
     button_catalog.onclick = () => {
         window.router('/categories');
         history.pushState({}, '', '/categories');
     };
-
+    
     const button_cart_large = document.getElementById('button_cart_large');
     button_cart_large.onclick = () => {
         window.router('/cart');
         history.pushState({}, '', '/cart');
     };
-
+    
     const button_cart = document.getElementById('button_cart');
     button_cart.onclick = () => {
         window.router('/cart');
         history.pushState({}, '', '/cart');
     };
-
+    
     const button_profile = document.getElementById('button_profile');
     button_profile.onclick = () => {
         Toastify({
@@ -398,12 +418,12 @@ export function profile() {
             className: 'toastify-info'
         }).showToast();
     };
-
+    
     const button_back = document.getElementById('button_back');
     button_back.onclick = () => {
         history.back();
     };
-
+    
     const button_logout = document.getElementById('button_logout');
     button_logout.onclick = async () => {
         await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
@@ -411,7 +431,7 @@ export function profile() {
         history.pushState({}, '', '/');
     };
 }
-    
+
 async function loadProfileData() {
     try {
         const res = await fetch('/api/profile', { credentials: 'same-origin' });
@@ -493,7 +513,6 @@ export function cart() {
                         <h3>Итого: <span id="cart-total-amount">0</span> BYN</h3>
                     </div>
                     <div class="cart-actions">
-                        <button type="button" id="button_checkout" class="button-submit">Оформить заказ</button>
                         <button type="button" id="button_continue" class="button-cancel">Продолжить покупки</button>
                     </div>
                 </div>
@@ -509,6 +528,22 @@ export function cart() {
     main.innerHTML = main_body;
     
     loadCart();
+    
+    const searchInput = document.getElementById('search-input');
+    let searchTimeout = null;
+    searchInput.oninput = (e) => {
+        const query = e.target.value.trim();
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (query.length >= 2) {
+                window.router(`/products?search=${encodeURIComponent(query)}`);
+                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+            } else if (query.length === 0) {
+                window.router('/products');
+                history.pushState({}, '', '/products');
+            }
+        }, 300);
+    };
     
     document.getElementById('button_catalog').onclick = () => {
         window.router('/categories');
@@ -536,10 +571,7 @@ export function cart() {
         window.router('/categories');
         history.pushState({}, '', '/categories');
     };
-    
-    document.getElementById('button_checkout').onclick = () => {
-        Toastify({ text: 'Функция оформления заказа в разработке', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-info' }).showToast();
-    };
+
 }
 
 async function loadCart() {
