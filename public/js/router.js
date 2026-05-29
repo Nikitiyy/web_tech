@@ -1,7 +1,22 @@
-import { login, recovery, reset_password, reg } from './auth.js';
-import { main_menu, categories, profile, cart } from './menu.js';
-import { admin_menu, admin_products, admin_add_product, admin_categories, admin_add_category, admin_edit_products, admin_admins, admin_add_admin } from './admin.js';
-import { products, productDetails } from './products.js';
+import { login, reg } from './auth.js';
+import { cart } from './cart.js';
+import { categories } from './categories.js';
+import { main_menu } from './main_menu.js';
+import { productDetails } from './products_details.js';
+import { products } from './products.js';
+import { profile } from './profile.js';
+import { recovery, reset_password } from './recovery.js';
+import { admin_add_admin } from './admin/admin_add_admin.js';
+import { admin_add_category } from './admin/admin_add_category.js';
+import { admin_add_product } from './admin/admin_add_product.js';
+import { admin_admins } from './admin/admin_admins.js';
+import { admin_categories } from './admin/admin_categories.js';
+import { admin_edit_products } from './admin/admin_edit_product.js';
+import { admin_menu } from './admin/admin_menu.js';
+import { admin_products } from './admin/admin_products.js';
+
+
+
 
 export async function router(path) {
     const main = document.querySelector('body');
