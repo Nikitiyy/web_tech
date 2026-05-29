@@ -1,4 +1,6 @@
-
+/**
+ этот файл разбит
+ */
 export function admin_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';    
@@ -227,7 +229,7 @@ window.editProduct = async function(id) {
     } catch (err) {
         Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
     }
-};
+};``
 
 async function loadAdminName() {
     try {

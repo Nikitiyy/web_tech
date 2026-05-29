@@ -1,3 +1,7 @@
+/*
+этот файл разделён
+*/
+
 export function main_menu() {
     const main = document.querySelector('body');
     main.innerHTML = '';    
