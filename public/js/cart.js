@@ -1,3 +1,6 @@
+import { TIME_OUT } from "./timeOut.js";
+import { showSpinner, hideSpinner } from "./spinner.js";
+
 export function cart() {
     const main = document.querySelector('body');
     main.innerHTML = '';
@@ -84,6 +87,9 @@ export function cart() {
         const query = e.target.value.trim();
         if (searchTimeout) clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
+            showSpinner();
+
+        try {
             if (query.length >= 2) {
                 window.router(`/products?search=${encodeURIComponent(query)}`);
                 history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
@@ -91,7 +97,10 @@ export function cart() {
                 window.router('/products');
                 history.pushState({}, '', '/products');
             }
-        }, 300);
+        } finally {
+            hideSpinner();
+        }
+        }, TIME_OUT);
     };
     
     document.getElementById('button_catalog').onclick = () => {

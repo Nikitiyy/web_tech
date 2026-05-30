@@ -1,4 +1,6 @@
 import { loadProducts } from "./load_products.js";
+import { TIME_OUT } from "./timeOut.js";
+import { showSpinner, hideSpinner } from "./spinner.js";
 
 export async function products(path) {
     const main = document.querySelector('body');
@@ -54,7 +56,7 @@ export async function products(path) {
     
     main.innerHTML = main_body;
     
-    // Добавляем обработчик поиска
+    // Обработчик поиска
     const searchInput = document.getElementById('search-input-header');
     if (searchInput) {
         let searchTimeout = null;
@@ -62,14 +64,20 @@ export async function products(path) {
             const query = e.target.value.trim();
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                if (query.length >= 2) {
-                    window.router(`/products?search=${encodeURIComponent(query)}`);
-                    history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
-                } else if (query.length === 0) {
-                    window.router('/products');
-                    history.pushState({}, '', '/products');
-                }
-            }, 300);
+                showSpinner();
+                
+                        try {
+                            if (query.length >= 2) {
+                                window.router(`/products?search=${encodeURIComponent(query)}`);
+                                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+                            } else if (query.length === 0) {
+                                window.router('/products');
+                                history.pushState({}, '', '/products');
+                            }
+                        } finally {
+                            hideSpinner();
+                        }
+            }, TIME_OUT);
         };
     }
         

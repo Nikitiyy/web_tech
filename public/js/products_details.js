@@ -1,3 +1,6 @@
+import { TIME_OUT } from "./timeOut.js";
+import { showSpinner, hideSpinner } from "./spinner.js";
+
 // Функция отображения деталей товара
 export async function productDetails(productId) { 
     const main = document.querySelector('body');
@@ -114,14 +117,20 @@ export async function productDetails(productId) {
                 const query = e.target.value.trim();
                 if (searchTimeout) clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
-                    if (query.length >= 2) {
-                        window.router(`/products?search=${encodeURIComponent(query)}`);
-                        history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
-                    } else if (query.length === 0) {
-                        window.router('/products');
-                        history.pushState({}, '', '/products');
-                    }
-                }, 300);
+                    showSpinner();
+
+        try {
+            if (query.length >= 2) {
+                window.router(`/products?search=${encodeURIComponent(query)}`);
+                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+            } else if (query.length === 0) {
+                window.router('/products');
+                history.pushState({}, '', '/products');
+            }
+        } finally {
+            hideSpinner();
+        }
+                }, TIME_OUT);
             };
         }
         

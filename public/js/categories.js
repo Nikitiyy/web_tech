@@ -1,3 +1,6 @@
+import { TIME_OUT } from "./timeOut.js";
+import { showSpinner, hideSpinner } from "./spinner.js";
+
 export async function categories() {
     const main = document.querySelector('body');
     main.innerHTML = '';
@@ -64,6 +67,9 @@ export async function categories() {
         const query = e.target.value.trim();
         if (searchTimeout) clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
+            showSpinner();
+
+        try {
             if (query.length >= 2) {
                 window.router(`/products?search=${encodeURIComponent(query)}`);
                 history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
@@ -71,7 +77,10 @@ export async function categories() {
                 window.router('/products');
                 history.pushState({}, '', '/products');
             }
-        }, 300);
+        } finally {
+            hideSpinner();
+        }
+        }, TIME_OUT);
     };
     
     const button_catalog = document.getElementById('button_catalog');
