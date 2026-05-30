@@ -1,0 +1,27 @@
+.page-container{min-height:100vh;width:100%;display:flex;flex-direction:column;background:linear-gradient(135deg,var(--bg-dark) 0%,var(--bg-mid) 50%,var(--bg-light) 100%);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+
+.header{display:flex;justify-content:center;align-items:center;padding:1em 2em;background:rgba(0,0,0,.3);backdrop-filter:blur(10px);border-bottom:1px solid var(--white-10);gap:1em}
+.header-center{flex:2;display:flex;justify-content:center;gap:.5em}
+.header-right{display:flex;align-items:center;gap:1em;flex:1;justify-content:flex-end}
+.header-search{flex:1;max-width:400px;display:flex;justify-content:center;align-items:center;position:relative}
+
+.input-search{width:100%;padding:.7em 1em;border-radius:var(--r-full);font-size:1em;padding-right:40px}
+.button-header{padding:.7em 1.2em;border-radius:var(--r-full);font-size:.95em;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.logo{color:var(--white-100);font-size:1.8em;font-weight:600}
+.admin-name{color:var(--accent);font-size:.95em;font-weight:600;padding:.7em 1.2em;white-space:nowrap}
+
+#button_catalog{color:var(--accent);box-shadow:none;width:auto;min-width:auto}
+#button_catalog:hover{color:var(--accent-light);text-decoration:none}
+
+.main-content{flex:1;padding:2em;display:flex;flex-direction:column;gap:2em;max-width:1200px;margin:0 auto;width:100%}
+
+.welcome-section{text-align:center;padding:2em 0}
+.welcome-section h2{color:var(--accent);font-size:2.5em;font-weight:600;margin-bottom:1em}
+.welcome-section p{color:var(--text-primary);font-size:1.2em}
+
+.info-section,.features-section{padding:2em;border-radius:var(--r-lg)}
+.info-section h3,.features-section h3,.category-item h3,.admin-card h3{color:var(--accent);font-size:1.5em;margin-bottom:1em}
+.info-section p,.features-section p,.category-item p,.admin-card p{color:var(--text-primary);font-size:1.1em;line-height:1.6}
+
+.features-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1em;margin-top:1em}
+.features-list li{color:var(--text-primary);font-size:1.1em;padding:1em;background:rgba(233,69,96,.1);border-radius:var(--r-sm);border-left:4px solid var(--accent)}

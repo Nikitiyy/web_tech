@@ -1,0 +1,4 @@
+.toastify{margin:0!important;padding:1em 1.5em!important;border-radius:var(--r-md)!important;color:var(--white-100)!important;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif!important;font-size:1em!important;box-shadow:0 4px 15px rgba(0,0,0,.3)!important;z-index:9999!important;min-width:280px}
+.toastify-success{background:linear-gradient(135deg,#00b09b,#96c93d)!important}
+.toastify-error{background:linear-gradient(135deg,var(--accent),var(--accent-light))!important}
+.toastify-info{background:linear-gradient(135deg,var(--bg-light),var(--bg-mid))!important}

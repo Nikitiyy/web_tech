@@ -1,0 +1,8 @@
+.profile-section{display:flex;justify-content:center;padding:2em 0}
+.profile-card{padding:3em;border-radius:var(--r-xl);text-align:center;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.3);animation:fadeIn .5s ease-out}
+.profile-avatar{font-size:5em;margin-bottom:.5em;line-height:1}
+.profile-info{display:flex;flex-direction:column;gap:1.2em;margin-bottom:2em}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:1em 1.5em;border-radius:var(--r-md);text-align:left}
+.info-label{color:var(--text-secondary);font-size:.95em;font-weight:500}
+.info-value{color:var(--white-100);font-size:1.1em;font-weight:600;word-break:break-all}
+.profile-actions{display:flex;justify-content:center}
