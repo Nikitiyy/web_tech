@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const pool = require('../db');
-const sendCode = require('../gmail');
+const pool = require('../db.js');
+const sendCode = require('../gmail.js');
 
 router.post('/login', async (req, res) => {
     const { login, password, role } = req.body;

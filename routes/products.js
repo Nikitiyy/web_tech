@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
-const pool = require('../db');
-const { requireAdmin } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const pool = require('../db.js');
+const { requireAdmin } = require('../middleware/auth.js');
+const upload = require('../middleware/upload.js');
 
 router.get('/products', async (req, res) => {
     const category = req.query.category;

@@ -1,3 +1,4 @@
+console.log("router");
 import { login, reg } from './auth.js';
 import { cart } from './cart.js';
 import { categories } from './categories.js';

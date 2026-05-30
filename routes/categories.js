@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
-const { requireAdmin } = require('../middleware/auth');
+const pool = require('../db.js');
+const { requireAdmin } = require('../middleware/auth.js');
 
 router.get('/categories', async (req, res) => {
     try {

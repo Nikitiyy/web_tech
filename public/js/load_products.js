@@ -49,15 +49,19 @@ export async function loadProducts(category, searchQuery) {
         // Отображение товаров
         container.innerHTML = products.map(product => `
             <div class="product-card">
-                <img src="${product.image_url || '/uploads/placeholder.jpg'}" alt="${product.name}">
-                <h3>${product.name}</h3>
+                <div class="click-details" onclick="window.router('/product/${product.id}'); history.pushState({}, '', '/product/${product.id}')">
+                    <img src="${product.image_url || '/uploads/placeholder.jpg'}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                </div>
                 <p class="product-desc">${product.description || 'Описание отсутствует'}</p>
                 <div class="product-price">${parseFloat(product.price).toFixed(2)} BYN</div>
                 <button type="button" class="button-add-to-cart" onclick="addToCart(${product.id})">
                     🛒 Добавить в корзину
                 </button>
             </div>
-        `).join('');
+        ` ).join('');
+
+
         
     } catch (err) {
         console.error('Ошибка загрузки товаров:', err);

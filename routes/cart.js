@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const pool = require('../db.js');
+const { requireAuth } = require('../middleware/auth.js');
 
 router.get('/cart', requireAuth, async (req, res) => {
     if (req.session.role !== 'user') {

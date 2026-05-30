@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const pool = require('../db');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const pool = require('../db.js');
+const { requireAuth, requireAdmin } = require('../middleware/auth.js');
 
 router.get('/admins', requireAdmin, async (req, res) => {
     try {

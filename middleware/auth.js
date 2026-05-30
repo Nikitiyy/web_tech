@@ -1,4 +1,4 @@
-const pool = require('../db');
+const pool = require('../db.js');
 
 function requireAuth(req, res, next) {
     if (!req.session.userId) {

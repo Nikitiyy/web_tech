@@ -6,6 +6,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json()); 
 
+app.set('trust proxy', 1);
+
 app.use(session({
     secret: 'secret',
     resave: false,
@@ -13,16 +15,11 @@ app.use(session({
     cookie: {
         maxAge: 3600000,
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: 'none'
     }
 }));
 
-const cors = require('cors');
-
-app.use(cors({
-    origin: 'https://nikitiyy.github.io/web_tech_hosting/',
-    credentials: true
-}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
