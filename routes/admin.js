@@ -61,6 +61,7 @@ router.delete('/admins/:id', requireAdmin, async (req, res) => {
 
 router.get('/profile', requireAuth, async (req, res) => {
     try {
+        console.log('Профиль:', req.session.userId);
         let rows;
 
         if (req.session.role === 'admin') {
