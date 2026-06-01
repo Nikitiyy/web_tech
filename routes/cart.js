@@ -159,4 +159,23 @@ router.get('/reservations', requireAuth, async (req, res) => {
     }
 });
 
+// Получить количество товара в корзине для конкретного продукта
+router.get('/cart/quantity/:product_id', requireAuth, async (req, res) => {
+    if (req.session.role !== 'user') {
+        return res.status(401).json({ success: false, message: 'Требуется авторизация' });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            'SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?',
+            [req.session.userId, parseInt(req.params.product_id)]
+        );
+
+        res.json({ success: true, quantity: rows.length > 0 ? rows[0].quantity : 0 });
+    } catch (err) {
+        console.error('Ошибка получения количества:', err);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
 module.exports = router;

@@ -121,6 +121,10 @@ window.addToCart = async function(productId) {
         
         if (addResult.success) {
             Toastify({ text: 'Товар добавлен в корзину', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+            // Обновляем отображение количества в каталоге
+            if (typeof loadCartQuantity === 'function') {
+                loadCartQuantity(productId);
+            }
         } else {
             if (addRes.status === 401) {
                 Toastify({ text: 'Войдите, чтобы добавить в корзину', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();

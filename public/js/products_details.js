@@ -69,9 +69,11 @@ export async function productDetails(productId) {
                     <p class="product-description">${product.description || 'Описание отсутствует'}</p>
                     <div class="product-details-price">${parseFloat(product.price).toFixed(2)} BYN</div>
                     
-                    <button type="button" id="button_add_to_cart" class="button-add-to-cart button-large">
-                        🛒 Добавить в корзину
-                    </button>
+                    <div id="cart-control-detail" class="cart-control-detail">
+                        <button type="button" id="button_add_to_cart" class="button-add-to-cart button-large">
+                            🛒 Добавить в корзину
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -83,6 +85,20 @@ export async function productDetails(productId) {
         `;
         
         main.innerHTML = main_body;
+        
+        // Проверяем авторизацию и загружаем количество
+        let isLoggedIn = false;
+        try {
+            const authRes = await fetch('/api/check-auth', { credentials: 'same-origin' });
+            const authResult = await authRes.json();
+            isLoggedIn = authResult.isLoggedIn && authResult.role === 'user';
+        } catch (e) {
+            // Игнорируем ошибки
+        }
+        
+        if (isLoggedIn) {
+            loadCartQuantityDetail(productId);
+        }
         
         // Обработчик добавления в корзину
         document.getElementById('button_add_to_cart').onclick = async () => {
@@ -97,6 +113,7 @@ export async function productDetails(productId) {
                 
                 if (addResult.success) {
                     Toastify({ text: 'Товар добавлен в корзину', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+                    loadCartQuantityDetail(productId);
                 } else {
                     if (addRes.status === 401) {
                         Toastify({ text: 'Войдите, чтобы добавить в корзину', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
@@ -175,3 +192,114 @@ export async function productDetails(productId) {
         main.innerHTML = '<div style="text-align:center;padding:2em;color:var(--accent);">Ошибка загрузки товара</div>';
     }
 } 
+
+// Загрузка количества товара в корзине для страницы деталей
+async function loadCartQuantityDetail(productId) {
+    try {
+        const res = await fetch(`/api/cart/quantity/${productId}`, { credentials: 'same-origin' });
+        const result = await res.json();
+        
+        const controlDiv = document.getElementById('cart-control-detail');
+        if (!controlDiv) return;
+        
+        if (result.success && result.quantity > 0) {
+            controlDiv.innerHTML = `
+                <div class="quantity-control-detail">
+                    <button type="button" class="button-qty-small" onclick="decreaseQuantityDetail(${productId})">−</button>
+                    <span class="qty-value">${result.quantity}</span>
+                    <button type="button" class="button-qty-small" onclick="increaseQuantityDetail(${productId})">+</button>
+                </div>
+            `;
+        } else {
+            controlDiv.innerHTML = `
+                <button type="button" id="button_add_to_cart" class="button-add-to-cart button-large">
+                    🛒 Добавить в корзину
+                </button>
+            `;
+            
+            // Восстанавливаем обработчик кнопки
+            document.getElementById('button_add_to_cart').onclick = async () => {
+                try {
+                    const addRes = await fetch('/api/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ product_id: productId, quantity: 1 })
+                    });
+                    const addResult = await addRes.json();
+                    
+                    if (addResult.success) {
+                        Toastify({ text: 'Товар добавлен в корзину', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+                        loadCartQuantityDetail(productId);
+                    } else {
+                        if (addRes.status === 401) {
+                            Toastify({ text: 'Войдите, чтобы добавить в корзину', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+                        } else {
+                            Toastify({ text: addResult.message || 'Ошибка', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+                        }
+                    }
+                } catch (err) {
+                    Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+                }
+            };
+        }
+    } catch (err) {
+        console.error('Ошибка загрузки количества:', err);
+    }
+}
+
+// Глобальные функции для управления количеством на странице деталей
+window.decreaseQuantityDetail = async function(productId) {
+    try {
+        // Получаем всю корзину для поиска cart_item_id
+        const fullCartRes = await fetch('/api/cart', { credentials: 'same-origin' });
+        const fullCartResult = await fullCartRes.json();
+        
+        if (!fullCartResult.success) return;
+        
+        const item = fullCartResult.items.find(i => i.product_id === productId);
+        if (!item) return;
+        
+        const currentQty = item.quantity;
+        
+        if (currentQty <= 1) {
+            // Удаляем из корзины
+            await fetch(`/api/cart/${item.id}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+        } else {
+            // Уменьшаем количество
+            await fetch('/api/cart/update', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ cart_item_id: item.id, quantity: currentQty - 1 })
+            });
+        }
+        
+        await loadCartQuantityDetail(productId);
+        Toastify({ text: 'Количество изменено', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+    } catch (err) {
+        Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+    }
+}; 
+
+window.increaseQuantityDetail = async function(productId) {
+    try {
+        const addRes = await fetch('/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ product_id: productId, quantity: 1 })
+        });
+        const addResult = await addRes.json();
+        
+        if (addResult.success) {
+            await loadCartQuantityDetail(productId);
+            Toastify({ text: 'Товар добавлен', duration: 2000, gravity: 'top', position: 'center', className: 'toastify-success' }).showToast();
+        }
+    } catch (err) {
+        Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+    }
+}; 
