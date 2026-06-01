@@ -37,3 +37,22 @@ select.input option{background:var(--bg-dark);color:var(--white-100);padding:.5e
 
 #button_guest{background:transparent;color:rgba(255,255,255,.8);border:2px solid var(--white-30)}
 #button_guest:hover{background:var(--white-10);border-color:rgba(255,255,255,.5);color:var(--white-100)}
+
+/* ===== ФУТЕР ===== */
+.footer{
+    text-align:center;
+    padding:2em 1.5em;
+    background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,rgba(0,0,0,.4) 100%);
+    border-top:1px solid var(--white-10);
+    margin-top:auto;
+    flex-shrink:0;
+}
+.footer p{
+    color:var(--text-secondary);
+    font-size:.9em;
+    margin:0;
+    transition:var(--transition);
+}
+.footer p:hover{
+    color:var(--accent);
+}
