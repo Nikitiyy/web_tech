@@ -10,6 +10,7 @@ import './products_details.js';
 import './products.js';
 import './profile.js';
 import './recovery.js';
+import './page404.js';
 import './admin/admin_add_admin.js';
 import './admin/admin_add_category.js';
 import './admin/admin_add_product.js';

@@ -7,6 +7,7 @@ import { productDetails } from './products_details.js';
 import { products } from './products.js';
 import { profile } from './profile.js';
 import { recovery, reset_password } from './recovery.js';
+import { page404 } from './page404.js';
 import { admin_add_admin } from './admin/admin_add_admin.js';
 import { admin_add_category } from './admin/admin_add_category.js';
 import { admin_add_product } from './admin/admin_add_product.js';
@@ -113,8 +114,9 @@ export async function router(path) {
             }
             break;
         }
-        case '/admin-edit-products': {
-            admin_edit_products(path);
+        default: {
+            // Если маршрут не найден - показываем страницу 404
+            page404();
             break;
         }
     }
