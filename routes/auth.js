@@ -4,6 +4,31 @@ const bcrypt = require('bcrypt');
 const pool = require('../db.js');
 const sendCode = require('../gmail.js');
 
+// Функция валидации пароля
+function validatePassword(password) {
+    if (!password || password.length < 6) {
+        return { valid: false, message: 'Пароль должен содержать минимум 6 символов' };
+    }
+    
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasDigit = /[0-9]/.test(password);
+    
+    if (!hasLowercase) {
+        return { valid: false, message: 'Пароль должен содержать хотя бы одну строчную букву' };
+    }
+    
+    if (!hasUppercase) {
+        return { valid: false, message: 'Пароль должен содержать хотя бы одну заглавную букву' };
+    }
+    
+    if (!hasDigit) {
+        return { valid: false, message: 'Пароль должен содержать хотя бы одну цифру' };
+    }
+    
+    return { valid: true };
+}
+
 router.post('/login', async (req, res) => {
     const { login, password, role } = req.body;
     try {
@@ -100,10 +125,11 @@ router.post('/reset-password', async (req, res) => {
     const { code, newPassword } = req.body;
 
     try {
-        if(newPassword.length < 6) {
+        const passwordValidation = validatePassword(newPassword);
+        if (!passwordValidation.valid) {
             return res.json({ 
                 success: false, 
-                message: 'Пароль должен состоять из 6 и более символов' 
+                message: passwordValidation.message 
             });
         }
         const [resetRows] = await pool.query(
@@ -144,8 +170,9 @@ router.post('/reset-password', async (req, res) => {
 router.post('/reg', async (req, res) => {
     const { login, email, password } = req.body;
     try {
-        if (!password || password.length < 6) {
-            return res.json({ success: false, message: 'Пароль должен содержать минимум 6 символов' });
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.valid) {
+            return res.json({ success: false, message: passwordValidation.message });
         }
         
         if (!login || login.length < 3) {

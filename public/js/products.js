@@ -65,18 +65,18 @@ export async function products(path) {
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 showSpinner();
-                
-                        try {
-                            if (query.length >= 2) {
-                                window.router(`/products?search=${encodeURIComponent(query)}`);
-                                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
-                            } else if (query.length === 0) {
-                                window.router('/products');
-                                history.pushState({}, '', '/products');
-                            }
-                        } finally {
-                            hideSpinner();
-                        }
+
+        try {
+            if (query.length >= 2) {
+                window.router(`/products?search=${encodeURIComponent(query)}`);
+                history.pushState({}, '', `/products?search=${encodeURIComponent(query)}`);
+            } else if (query.length === 0) {
+                window.router('/products');
+                history.pushState({}, '', '/products');
+            }
+        } finally {
+            hideSpinner();
+        }
             }, TIME_OUT);
         };
     }

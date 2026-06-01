@@ -195,6 +195,39 @@ export function reg() {
             return;
         }
 
+        if (!/[a-z]/.test(password)) {
+            Toastify({
+                text: 'Пароль должен содержать хотя бы одну строчную букву',
+                duration: 5000,
+                gravity: 'top',
+                position: 'right',
+                className: 'toastify-error'
+            }).showToast();
+            return;
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            Toastify({
+                text: 'Пароль должен содержать хотя бы одну заглавную букву',
+                duration: 5000,
+                gravity: 'top',
+                position: 'right',
+                className: 'toastify-error'
+            }).showToast();
+            return;
+        }
+
+        if (!/[0-9]/.test(password)) {
+            Toastify({
+                text: 'Пароль должен содержать хотя бы одну цифру',
+                duration: 5000,
+                gravity: 'top',
+                position: 'right',
+                className: 'toastify-error'
+            }).showToast();
+            return;
+        }
+
         const data = {
             login,
             email,

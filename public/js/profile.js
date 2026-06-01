@@ -1,5 +1,5 @@
 import { TIME_OUT } from "./timeOut.js";
-import { showSpinner, hideSpinner} from "./spinner.js";
+import { showSpinner, hideSpinner } from "./spinner.js";
 
 export function profile() {
     console.log("Profile");
@@ -87,7 +87,7 @@ export function profile() {
     searchInput.oninput = (e) => {
         const query = e.target.value.trim();
         if (searchTimeout) clearTimeout(searchTimeout);
-        // searchTimeout = setTimeout(() => {
+        searchTimeout = setTimeout(() => {
             showSpinner();
 
         try {
@@ -101,7 +101,7 @@ export function profile() {
         } finally {
             hideSpinner();
         }
-        // }, TIME_OUT);
+        }, TIME_OUT);
     };
 
     const button_catalog = document.getElementById('button_catalog');

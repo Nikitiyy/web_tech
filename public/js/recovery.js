@@ -138,9 +138,42 @@ export function reset_password() {
             return;
         }
         
-        if (newPassword < 6) {
+        if (newPassword.length < 6) {
             Toastify({
-                text: 'Пароль должен состоять из 6 и более символов',
+                text: 'Пароль должен содержать минимум 6 символов',
+                duration: 5000,
+                gravity: 'top',
+                position: 'right',
+                className: 'toastify-error'
+            }).showToast();
+            return;
+        }
+
+        if (!/[a-z]/.test(newPassword)) {
+            Toastify({
+                text: 'Пароль должен содержать хотя бы одну строчную букву',
+                duration: 5000,
+                gravity: 'top',
+                position: 'right',
+                className: 'toastify-error'
+            }).showToast();
+            return;
+        }
+
+        if (!/[A-Z]/.test(newPassword)) {
+            Toastify({
+                text: 'Пароль должен содержать хотя бы одну заглавную букву',
+                duration: 5000,
+                gravity: 'top',
+                position: 'right',
+                className: 'toastify-error'
+            }).showToast();
+            return;
+        }
+
+        if (!/[0-9]/.test(newPassword)) {
+            Toastify({
+                text: 'Пароль должен содержать хотя бы одну цифру',
                 duration: 5000,
                 gravity: 'top',
                 position: 'right',
