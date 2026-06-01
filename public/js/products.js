@@ -5,20 +5,26 @@ import { showSpinner, hideSpinner } from "./spinner.js";
 export async function products(path) {
     const main = document.querySelector('body');
     
-    // Парсим category и search из переданного path
+    // Парсим category, search и page из переданного path
     let category = 'all';
     let searchQuery = null;
+    let page = 1;
     
     if (path && path.includes('?')) {
         const queryString = path.split('?')[1] || '';
         const urlParams = new URLSearchParams(queryString);
         category = urlParams.get('category') || 'all';
         searchQuery = urlParams.get('search');
+        page = parseInt(urlParams.get('page')) || 1;
     } else if (!path) {
         const urlParams = new URLSearchParams(window.location.search);
         category = urlParams.get('category') || 'all';
         searchQuery = urlParams.get('search');
+        page = parseInt(urlParams.get('page')) || 1;
     }
+    
+    // Всегда начинаем с первой страницы при загрузке
+    page = 1;
     
     const main_body = `
     <div class="page-container">
@@ -104,7 +110,7 @@ export async function products(path) {
     };
     
     // Загрузка товаров
-    await loadProducts(category, searchQuery);
+    await loadProducts(category, searchQuery, page);
 }
 
 

@@ -109,3 +109,103 @@
     font-weight: 600;
     font-size: 1em;
 }
+
+/* ===== ПАГИНАЦИЯ ===== */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .5em;
+    margin-top: 2em;
+    padding: 1.5em;
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 .8em;
+    border: 1px solid var(--white-10);
+    border-radius: var(--r-sm);
+    background: var(--white-8);
+    color: var(--white-100);
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover {
+    background: var(--white-10);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.pagination-btn.pagination-current {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-color: var(--accent);
+    cursor: default;
+}
+
+.pagination-btn.pagination-current:hover {
+    transform: none;
+}
+
+.pagination-btn.pagination-arrow {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.pagination-ellipsis {
+    color: var(--text-secondary);
+    font-size: 1.2em;
+    padding: 0 .5em;
+}
+
+/* ===== КНОПКА "ПОКАЗАТЬ ЕЩЁ" ===== */
+.show-more-container {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 2em;
+    padding: 1.5em;
+}
+
+.button-show-more {
+    padding: 1em 2.5em;
+    border: 2px solid var(--accent);
+    border-radius: var(--r-md);
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: var(--white-100);
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(233, 69, 96, .4);
+    display: flex;
+    align-items: center;
+    gap: .5em;
+}
+
+.button-show-more:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, .5);
+    border-color: var(--accent-light);
+}
+
+.button-show-more:active {
+    transform: translateY(-1px);
+}
+
+.show-more-arrow {
+    font-size: 1.3em;
+    transition: var(--transition);
+}
+
+.button-show-more:hover .show-more-arrow {
+    transform: translateY(3px);
+}

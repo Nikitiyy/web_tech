@@ -1,4 +1,4 @@
-export async function loadProducts(category, searchQuery) {
+export async function loadProducts(category, searchQuery, page = 1, append = false) {
     const container = document.getElementById('products-container');
     const infoElement = document.getElementById('search-info');
     if (!container) return;
@@ -6,6 +6,7 @@ export async function loadProducts(category, searchQuery) {
     try {
         let products = [];
         let count = 0;
+        let pagination = null;
         
         // Проверяем авторизацию для загрузки количества в корзине
         let isLoggedIn = false;
@@ -14,10 +15,11 @@ export async function loadProducts(category, searchQuery) {
             const authResult = await authRes.json();
             isLoggedIn = authResult.isLoggedIn && authResult.role === 'user';
         } catch (e) {
+            // Игнорируем ошибки проверки авторизации
         }
         
         if (searchQuery && searchQuery.trim().length >= 2) {
-            // Поиск товаров
+            // Поиск товаров (без пагинации для поиска)
             const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, { credentials: 'same-origin' });
             const result = await res.json();
             
@@ -35,55 +37,107 @@ export async function loadProducts(category, searchQuery) {
                 }
             }
         } else {
-            // Загрузка по категории
+            // Загрузка по категории с пагинацией
             const categoryParam = category === 'all' ? '' : `?category=${category}`;
-            const res = await fetch(`/api/products${categoryParam}`, { credentials: 'same-origin' });
+            const res = await fetch(`/api/products${categoryParam ? categoryParam + '&' : '?'}page=${page}&limit=9`, { credentials: 'same-origin' });
             const result = await res.json();
             
             if (result.success) {
                 products = result.products || [];
-                count = products.length;
+                pagination = result.pagination;
+                count = pagination ? pagination.total : products.length;
                 
                 if (infoElement) {
-                    infoElement.textContent = `Товаров: ${count}`;
+                    // Показываем количество отображаемых товаров из общего числа
+                    const displayedCount = page * 9;
+                    const showCount = Math.min(displayedCount, count);
+                    infoElement.textContent = `Товаров: ${showCount} из ${count}`;
                 }
                 
-                if (products.length === 0) {
+                if (products.length === 0 && !append) {
                     container.innerHTML = '<div style="text-align:center;grid-column:1/-1;color:var(--text-secondary);font-size:1.2em">Товаров пока нет</div>';
                     return;
                 }
             }
         }
         
-        // Отображение товаров
-        container.innerHTML = products.map(product => `
-            <div class="product-card">
-                <div class="click-details" onclick="window.router('/product/${product.id}'); history.pushState({}, '', '/product/${product.id}')">
-                    <img src="${product.image_url || '/uploads/placeholder.jpg'}" alt="${product.name}">
-                    <h3>${product.name}</h3>
+        // Если это не первая загрузка (append=true), добавляем товары к существующим
+        if (append) {
+            const existingCards = container.querySelectorAll('.product-card');
+            const currentTotal = existingCards.length + products.length;
+            
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="click-details" onclick="window.router('/product/${product.id}'); history.pushState({}, '', '/product/${product.id}')">
+                        <img src="${product.image_url || '/uploads/placeholder.jpg'}" alt="${product.name}">
+                        <h3>${product.name}</h3>
+                    </div>
+                    <p class="product-desc">${product.description || 'Описание отсутствует'}</p>
+                    <div class="product-price">${parseFloat(product.price).toFixed(2)} BYN</div>
+                    <div id="cart-control-${product.id}" class="cart-control">
+                        <button type="button" class="button-add-to-cart" onclick="addToCart(${product.id})">
+                            🛒 Добавить в корзину
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+                
+                // Загружаем количество для товара
+                if (isLoggedIn) {
+                    loadCartQuantity(product.id);
+                }
+            });
+            
+            // Обновляем счётчик
+            if (infoElement && pagination) {
+                const showCount = Math.min(currentTotal, pagination.total);
+                infoElement.textContent = `Товаров: ${showCount} из ${pagination.total}`;
+            }
+        } else {
+            // Отображение товаров (первая загрузка)
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="click-details" onclick="window.router('/product/${product.id}'); history.pushState({}, '', '/product/${product.id}')">
+                        <img src="${product.image_url || '/uploads/placeholder.jpg'}" alt="${product.name}">
+                        <h3>${product.name}</h3>
+                    </div>
+                    <p class="product-desc">${product.description || 'Описание отсутствует'}</p>
+                    <div class="product-price">${parseFloat(product.price).toFixed(2)} BYN</div>
+                    <div id="cart-control-${product.id}" class="cart-control">
+                        <button type="button" class="button-add-to-cart" onclick="addToCart(${product.id})">
+                            🛒 Добавить в корзину
+                        </button>
+                    </div>
                 </div>
-                <p class="product-desc">${product.description || 'Описание отсутствует'}</p>
-                <div class="product-price">${parseFloat(product.price).toFixed(2)} BYN</div>
-                <div id="cart-control-${product.id}" class="cart-control">
-                    <button type="button" class="button-add-to-cart" onclick="addToCart(${product.id})">
-                        🛒 Добавить в корзину
+            ` ).join('');
+
+            // Загрузка количества для каждого товара, если пользователь авторизован
+            if (isLoggedIn) {
+                products.forEach(product => {
+                    loadCartQuantity(product.id);
+                });
+            }
+        }
+
+        // Добавляем кнопку "Показать ещё", если есть следующая страница
+        if (pagination && pagination.page < pagination.totalPages) {
+            const showMoreHTML = `
+                <div class="show-more-container">
+                    <button type="button" class="button-show-more" onclick="handleShowMoreClick(${pagination.page + 1}, '${category}', '${searchQuery || ''}')">
+                        Показать ещё товары <span class="show-more-arrow">↓</span>
                     </button>
                 </div>
-            </div>
-        ` ).join('');
-
-        // Загрузка количества для каждого товара, если пользователь авторизован
-        if (isLoggedIn) {
-            products.forEach(product => {
-                loadCartQuantity(product.id);
-            });
+            `;
+            container.insertAdjacentHTML('beforeend', showMoreHTML);
         }
 
     } catch (err) {
         console.error('Ошибка загрузки товаров:', err);
         container.innerHTML = '<div style="text-align:center;grid-column:1/-1;color:var(--accent);font-size:1.2em">Ошибка загрузки товаров</div>';
     }
-} 
+}
 
 // Загрузка количества товара в корзине (глобальная функция)
 window.loadCartQuantity = async function(productId) {
@@ -169,5 +223,33 @@ window.increaseQuantity = async function(productId) {
         }
     } catch (err) {
         Toastify({ text: 'Ошибка сервера', duration: 3000, gravity: 'top', position: 'center', className: 'toastify-error' }).showToast();
+    }
+}; 
+
+// Обработчик клика по кнопке "Показать ещё"
+window.handleShowMoreClick = async function(page, category, searchQuery) {
+    const container = document.getElementById('products-container');
+    if (!container) return;
+    
+    // Находим и удаляем кнопку "Показать ещё"
+    const showMoreBtn = container.querySelector('.show-more-container');
+    if (showMoreBtn) {
+        showMoreBtn.remove();
+    }
+    
+    // Показываем индикатор загрузки
+    const loadingHTML = '<div class="show-more-loading" style="text-align:center;grid-column:1/-1;padding:2em;color:var(--text-secondary)">Загрузка товаров...</div>';
+    container.insertAdjacentHTML('beforeend', loadingHTML);
+    
+    // Прокручиваем к кнопке
+    container.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    
+    // Загружаем товары для следующей страницы и добавляем к существующим
+    await loadProducts(category, searchQuery, page, true);
+    
+    // Удаляем индикатор загрузки
+    const loadingIndicator = container.querySelector('.show-more-loading');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
     }
 }; 

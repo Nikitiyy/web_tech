@@ -8,19 +8,26 @@ const upload = require('../middleware/upload.js');
 
 router.get('/products', async (req, res) => {
     const category = req.query.category;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    const offset = (page - 1) * limit;
 
     try {
         let query;
         let params;
+        let countQuery;
+        let countParams;
         
         if (category === 'all' || !category) {
-            query = 'SELECT * FROM products WHERE is_available = TRUE';
-            params = [];
+            query = 'SELECT * FROM products WHERE is_available = TRUE LIMIT ? OFFSET ?';
+            params = [limit, offset];
+            countQuery = 'SELECT COUNT(*) as total FROM products WHERE is_available = TRUE';
+            countParams = [];
         } else {
             const [catRows] = await pool.query('SELECT id FROM categories WHERE slug = ?', [category]);
             
             if (catRows.length === 0) {
-                return res.json({ success: true, products: [] });
+                return res.json({ success: true, products: [], total: 0, page, totalPages: 0 });
             }
             
             const categoryId = catRows[0].id;
@@ -35,13 +42,28 @@ router.get('/products', async (req, res) => {
                 categoryIds = [categoryId, ...childRows.map(r => r.id)];
             }
             
-            query = 'SELECT * FROM products WHERE is_available = TRUE AND category_id IN (?)';
-            params = [categoryIds];
+            query = 'SELECT * FROM products WHERE is_available = TRUE AND category_id IN (?) LIMIT ? OFFSET ?';
+            params = [categoryIds, limit, offset];
+            countQuery = 'SELECT COUNT(*) as total FROM products WHERE is_available = TRUE AND category_id IN (?)';
+            countParams = [categoryIds];
         }
         
         const [rows] = await pool.query(query, params);
+        const [countRows] = await pool.query(countQuery, countParams);
 
-        res.json({ success: true, products: rows });
+        const total = countRows[0].total;
+        const totalPages = Math.ceil(total / limit);
+
+        res.json({
+            success: true,
+            products: rows,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Ошибка сервера' });

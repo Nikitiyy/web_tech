@@ -121,4 +121,16 @@
     .product-details-price {
         font-size: 2em;
     }
+
+    /* Кнопка "Показать ещё" на мобильных */
+    .button-show-more {
+        width: 100%;
+        justify-content: center;
+        padding: 1em 1.5em;
+        font-size: 1em;
+    }
+
+    .show-more-arrow {
+        font-size: 1.1em;
+    }
 }
