@@ -169,3 +169,293 @@
 | `/admin-add-admin`   | Добавление администратора               |
 | `/admin-edit-products`| Редактирование товара                  |
 
+---
+
+# 🚀 Как запустить проект на своём компьютере
+
+Эта инструкция поможет вам запустить сайт музыкального магазина локально. Следуйте шагам по порядку.
+
+## 📋 Требования
+
+Перед началом убедитесь, что у вас установлены:
+
+| Программа | Версия | Где скачать |
+|-----------|--------|-------------|
+| **Node.js** | 16.x или выше | [nodejs.org](https://nodejs.org/) |
+| **MySQL** | 5.7 или 8.x | [mysql.com](https://dev.mysql.com/downloads/) |
+| **Git** (опционально) | Любая | [git-scm.com](https://git-scm.com/) |
+
+---
+
+## 📥 Шаг 1: Скачивание проекта
+
+### Способ 1: Через Git (рекомендуется)
+```bash
+git clone <URL-репозитория>
+cd <имя-папки-проекта>
+```
+
+### Способ 2: Вручную
+1. Нажмите зелёную кнопку **Code** на GitHub
+2. Выберите **Download ZIP**
+3. Распакуйте архив в удобную папку
+4. Откройте эту папку в терминале
+
+---
+
+## 📦 Шаг 2: Установка зависимостей
+
+Установите все необходимые пакеты Node.js:
+
+```bash
+npm install
+```
+
+После выполнения в папке появится папка `node_modules`.
+
+---
+
+## 🗄️ Шаг 3: Настройка базы данных
+
+### 3.1 Создайте базу данных
+
+Зайдите в MySQL через командную строку или phpMyAdmin:
+
+```sql
+CREATE DATABASE music_store CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 3.2 Создайте таблицы
+
+Выполните SQL-запросы для создания таблиц:
+
+```sql
+-- Таблица пользователей
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица администраторов
+CREATE TABLE admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица категорий
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    parent_id INT NULL,
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+
+-- Таблица товаров
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    category_id INT NOT NULL,
+    image_url VARCHAR(500),
+    is_available BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
+);
+
+-- Таблица изображений товаров
+CREATE TABLE product_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    is_main BOOLEAN DEFAULT FALSE,
+    display_order INT DEFAULT 0,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Таблица корзины
+CREATE TABLE cart_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Таблица бронирований
+CREATE TABLE reservations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Таблица кодов восстановления пароля
+CREATE TABLE reset_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    code VARCHAR(6) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 3.3 Создайте первого администратора
+
+Вам нужно создать хотя бы одного администратора для входа в админ-панель:
+
+```sql
+-- Сначала создайте временного пользователя
+INSERT INTO admins (login, password) VALUES 
+('admin', '$2b$10$YourHashedPasswordHere');
+```
+
+**Важно:** Пароль должен быть захеширован через bcrypt! Используйте этот код Node.js для генерации:
+
+```javascript
+const bcrypt = require('bcrypt');
+const hash = bcrypt.hashSync('ваш_пароль', 10);
+console.log(hash); // Скопируйте этот хеш в SQL-запрос
+```
+
+Или выполните через Node.js после запуска проекта (создайте файл `create-admin.js`).
+
+---
+
+## ⚙️ Шаг 4: Настройка конфигурации
+
+### 4.1 Настройте подключение к базе данных
+
+Откройте файл `db.js` и измените параметры подключения:
+
+```javascript
+const pool = mysql.createPool({
+    host: 'localhost',        // Адрес сервера MySQL
+    user: 'root',             // Ваше имя пользователя MySQL
+    password: 'ваш_пароль',   // Ваш пароль от MySQL
+    database: 'music_store',  // Имя базы данных
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+```
+
+### 4.2 Настройте отправку email (для восстановления пароля)
+
+Откройте файл `gmail.js` и укажите ваши данные:
+
+```javascript
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'ваш_email@gmail.com',
+        pass: 'ваш_пароль_приложения' // Не обычный пароль, а App Password!
+    }
+});
+```
+
+**Важно:** Для Gmail нужно создать **App Password**:
+1. Зайдите в Google Account → Security
+2. Включите 2-Step Verification
+3. Создайте App Password для "Mail"
+4. Используйте этот 16-значный пароль
+
+---
+
+## 🎯 Шаг 5: Запуск сервера
+
+### 5.1 Запустите MySQL
+
+Убедитесь, что сервер MySQL запущен:
+- **Windows:** Проверьте в службах (services.msc) → MySQL
+- **macOS:** `brew services start mysql`
+- **Linux:** `sudo systemctl start mysql`
+
+### 5.2 Запустите Node.js сервер
+
+В терминале в папке проекта выполните:
+
+```bash
+npm start
+```
+
+Или:
+
+```bash
+node server.js
+```
+Или:
+
+```
+npx nodemon server.js
+```
+Это нужно для автоматического перезпуска сервера при изменении файлов.
+
+Вы должны увидеть сообщение:
+```
+Server started on 3000
+```
+
+### 5.3 Откройте сайт
+
+В браузере перейдите по адресу:
+```
+http://localhost:3000
+```
+
+---
+
+## 🔧 Возможные проблемы и решения
+
+| Проблема | Решение |
+|----------|---------|
+| `Cannot find module 'express'` | Выполните `npm install` |
+| `ECONNREFUSED` при подключении к MySQL | Проверьте, что MySQL запущен |
+| `Access denied for user 'root'` | Проверьте логин/пароль в `db.js` |
+| `Port 3000 is already in use` | Измените порт в `server.js` или остановите другой процесс |
+| Не работает восстановление пароля | Проверьте настройки в `gmail.js` |
+| Не видно изображения товаров | Проверьте, что папка `public/uploads` существует |
+
+---
+
+## 📁 Структура папок
+
+```
+project/
+├── public/              # Фронтенд файлы
+│   ├── js/             # JavaScript файлы
+│   ├── uploads/        # Загруженные изображения
+│   └── *.css           # Стили
+├── routes/             # API эндпоинты
+├── middleware/         # Промежуточное ПО
+├── db.js              # Настройки базы данных
+├── gmail.js           # Настройки email
+├── server.js          # Главный сервер
+└── package.json       # Зависимости проекта
+```
+
+---
+
+## 🎉 Готово!
+
+Теперь у вас есть работающая копия сайта музыкального магазина. Вы можете:
+
+- ✅ Регистрироваться и входить в аккаунт
+- ✅ Просматривать товары и категории
+- ✅ Добавлять товары в корзину
+- ✅ Бронировать товары
+- ✅ Войти как администратор и управлять товарами
+
+**Совет:** Для начала добавьте несколько категорий и товаров через админ-панель, чтобы увидеть контент на сайте.
+
