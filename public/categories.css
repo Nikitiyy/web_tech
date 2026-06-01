@@ -1,11 +1,67 @@
-.categories-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5em;margin-top:1em;align-items:start}
-.category-group{display:flex;flex-direction:column;gap:.4em}
-.category-item{padding:1.2em 1.5em;border-radius:var(--r-md);cursor:pointer;transition:var(--transition);text-align:left}
-.category-item:hover{transform:translateY(-2px);background:rgba(255,255,255,.1);border-color:var(--accent)}
-.category-item h3{font-size:1.2em;margin-bottom:.2em}
-.category-item p{font-size:.9em;color:var(--text-secondary)}
-.category-children{display:flex;flex-direction:column;gap:.3em;padding-left:1em;border-left:2px solid var(--white-10);margin-left:.5em}
-.category-child{padding:.6em 1em;opacity:.85;background:var(--white-8)}
-.category-child h3{font-size:.95em;color:var(--text-secondary)}
-.category-child p{font-size:.8em}
-.category-child:hover{opacity:1}
+/* ===== СЕКЦИЯ КАТЕГОРИЙ ===== */
+.categories-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5em;
+    margin-top: 1em;
+    align-items: start;
+}
+
+.category-group {
+    display: flex;
+    flex-direction: column;
+    gap: .4em;
+}
+
+.category-item {
+    padding: 1.2em 1.5em;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+}
+
+.category-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, .1);
+    border-color: var(--accent);
+}
+
+.category-item h3 {
+    font-size: 1.2em;
+    margin-bottom: .2em;
+}
+
+.category-item p {
+    font-size: .9em;
+    color: var(--text-secondary);
+}
+
+/* ===== ДОЧЕРНИЕ КАТЕГОРИИ ===== */
+.category-children {
+    display: flex;
+    flex-direction: column;
+    gap: .3em;
+    padding-left: 1em;
+    border-left: 2px solid var(--white-10);
+    margin-left: .5em;
+}
+
+.category-child {
+    padding: .6em 1em;
+    opacity: .85;
+    background: var(--white-8);
+}
+
+.category-child h3 {
+    font-size: .95em;
+    color: var(--text-secondary);
+}
+
+.category-child p {
+    font-size: .8em;
+}
+
+.category-child:hover {
+    opacity: 1;
+}
